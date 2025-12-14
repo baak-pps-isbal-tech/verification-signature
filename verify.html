@@ -194,13 +194,13 @@
             // Baca parameter dari URL
             const urlParams = new URLSearchParams(window.location.search);
             const nim = urlParams.get('nim');
-            const tanggal = urlParams.get('tanggal');
+            const created_at = urlParams.get('created_at'); // <--- DIUBAH MENJADI INI
             const hashFromUrl = urlParams.get('hash');
 
             const resultsDiv = document.getElementById('results');
 
             // Periksa apakah semua parameter ada
-            if (!nim || !tanggal || !hashFromUrl) {
+            if (!nim || !created_at || !hashFromUrl) { // <--- DIUBAH
                 resultsDiv.innerHTML = `
                     <div class="status-card failed">
                         <i class="fas fa-exclamation-circle"></i>
@@ -214,7 +214,7 @@
             }
 
             // --- LAKUKAN VERIFIKASI HASH ---
-            const stringToHash = `${nim}-${tanggal}-${NAMA_PETUGAS_PYTHON}`;
+            const stringToHash = `${nim}-${created_at}-${NAMA_PETUGAS_PYTHON}`;
             const generatedHash = sha256(stringToHash);
             
             let finalHTML = '';
@@ -222,11 +222,7 @@
                 // --- JIKA BERHASIL ---
                 finalHTML = `
                     <div class="status-card success">
-                        <i class="fas fa-check-circle"></i>
-                        <div>
-                            <h2>Verifikasi Berhasil</h2>
-                            <p>KTM Sementara ini ASLI dan VALID.</p>
-                        </div>
+                        // ...
                     </div>
                     <div class="data-card">
                         <h3>Detail Data Mahasiswa</h3>
@@ -239,7 +235,7 @@
                             <li>
                                 <i class="fas fa-calendar-alt icon"></i>
                                 <span class="label">Tanggal Dibuat</span>
-                                <span class="value">${tanggal}</span>
+                                <span class="value">${created_at}</span> // <--- DIUBAH
                             </li>
                         </ul>
                     </div>
@@ -265,3 +261,4 @@
     </script>
 </body>
 </html>
+
