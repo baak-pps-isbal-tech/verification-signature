@@ -59,8 +59,9 @@
                 return;
             }
 
-            // --- GANTI DENGAN URL API ANDA ---
-            const apiUrl = `https://baak-pps-isbal-tech.github.io/verification-signature/?h=${hash}`;
+            // --- GANTI DENGAN IP KOMPUTER ANDA ---
+            // GANTI '192.168.1.100' dengan IP lokal komputer Anda
+            const apiUrl = `http://192.168.1.100:5000/verify?h=${hash}`;
 
             // Gunakan fetch untuk meminta data ke server
             fetch(apiUrl)
@@ -94,5 +95,3 @@
     </script>
 </body>
 </html>
-
-
