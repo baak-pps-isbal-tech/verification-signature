@@ -207,7 +207,7 @@
             // --- PERUBAHAN: Fungsi untuk memformat timestamp ---
             function formatTimestamp(timestampStr) {
                 // Contoh input: "2023-10-27 15:45:10"
-                const date = new Date(timestampStr + 'Z'); // Tambahkan 'Z' untuk dianggap UTC
+                const date = new Date(timestampStr);  // Tambahkan 'Z' untuk dianggap UTC
                 
                 const options = {
                     weekday: 'long',
@@ -274,3 +274,4 @@
     </script>
 </body>
 </html>
+
