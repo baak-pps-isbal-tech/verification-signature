@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hasil Verifikasi KTM</title>
-    
-    <!-- Library untuk membuat Hash SHA256 (untuk verifikasi) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
-
     <style>
+        /* ... (CSS tetap sama dengan sebelumnya) ... */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
@@ -31,49 +28,13 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             text-align: center;
         }
-        h1 {
-            color: #004A7C;
-            margin-top: 0;
-        }
-        .data-list {
-            list-style-type: none;
-            padding: 0;
-            text-align: left;
-            margin: 20px 0;
-        }
-        .data-list li {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .data-list .label {
-            font-weight: bold;
-            color: #495057;
-        }
-        .data-list .value {
-            color: #212529;
-            word-break: break-all;
-        }
-        .verification-success {
-            color: #155724;
-            font-weight: bold;
-            padding: 15px;
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            border-radius: 5px;
-        }
-        .verification-failed {
-            color: #721c24;
-            font-weight: bold;
-            padding: 15px;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 5px;
-        }
+        h1 { color: #004A7C; margin-top: 0; }
+        .data-list { list-style-type: none; padding: 0; text-align: left; margin: 20px 0; }
+        .data-list li { background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px; margin-bottom: 8px; border-radius: 5px; display: flex; justify-content: space-between; }
+        .data-list .label { font-weight: bold; color: #495057; }
+        .data-list .value { color: #212529; word-break: break-all; }
+        .verification-success { color: #155724; font-weight: bold; padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; }
+        .verification-failed { color: #721c24; font-weight: bold; padding: 15px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -81,55 +42,54 @@
     <div class="container">
         <h1>Verifikasi KTM Sementara</h1>
         <div id="results">
-            <p>Memuat data verifikasi...</p>
+            <p>Memverifikasi data...</p>
         </div>
     </div>
 
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            // Konstanta harus sama dengan yang di script Python
-            const NAMA_PETUGAS_PYTHON = "R Burham Isnanto F., S.Si., M.Kom., M.M.";
-
-            // Baca parameter dari URL
+            // Baca parameter hash dari URL
             const urlParams = new URLSearchParams(window.location.search);
-            const nim = urlParams.get('nim');
-            const tanggal = urlParams.get('tanggal');
-            const hashFromUrl = urlParams.get('hash');
+            const hash = urlParams.get('h');
 
             const resultsDiv = document.getElementById('results');
 
-            // Periksa apakah semua parameter ada
-            if (!nim || !tanggal || !hashFromUrl) {
-                resultsDiv.innerHTML = `<div class="verification-failed">❌ GAGAL: Data verifikasi tidak lengkap atau URL tidak valid.</div>`;
+            if (!hash) {
+                resultsDiv.innerHTML = `<div class="verification-failed">❌ GAGAL: Parameter verifikasi (hash) tidak ditemukan di URL.</div>`;
                 return;
             }
 
-            // --- TAMPILKAN DATA DARI URL ---
-            let dataHTML = '<ul class="data-list">';
-            dataHTML += `<li><span class="label">NIM Mahasiswa:</span><span class="value">${nim}</span></li>`;
-            dataHTML += `<li><span class="label">Tanggal Dibuat:</span><span class="value">${tanggal}</span></li>`;
-            dataHTML += `</ul>`;
+            // --- GANTI DENGAN URL API ANDA ---
+            const apiUrl = `https://your-api-domain.com/verify?h=${hash}`;
 
-            // --- LAKUKAN VERIFIKASI HASH ---
-            // 1. Buat ulang string yang di-hash di Python
-            const stringToHash = `${nim}-${tanggal}-${NAMA_PETUGAS_PYTHON}`;
-            
-            // 2. Hash string tersebut
-            const generatedHash = sha256(stringToHash);
-
-            // 3. Bandingkan hash yang dihasilkan dengan hash dari URL
-            let statusHTML = '';
-            if (generatedHash === hashFromUrl) {
-                statusHTML = `<div class="verification-success">✅ VERIFIKASI BERHASIL: QR Code ASLI dan data VALID.</div>`;
-            } else {
-                statusHTML = `<div class="verification-failed">❌ VERIFIKASI GAGAL: Hash tidak cocok. QR Code mungkin telah dipalsukan.</div>`;
-            }
-
-            // Tampilkan hasil akhir
-            resultsDiv.innerHTML = `
-                ${dataHTML}
-                ${statusHTML}
-            `;
+            // Gunakan fetch untuk meminta data ke server
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        // Jika server merespons error (404, 500, dll)
+                        return response.json().then(err => { throw err; });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Jika verifikasi berhasil
+                    let dataHTML = '<ul class="data-list">';
+                    dataHTML += `<li><span class="label">NIM Mahasiswa:</span><span class="value">${data.data.nim}</span></li>`;
+                    dataHTML += `<li><span class="label">Tanggal Dibuat:</span><span class="value">${data.data.tanggal}</span></li>`;
+                    dataHTML += `<li><span class="label">Hash:</span><span class="value">${data.data.hash}</span></li>`;
+                    dataHTML += `</ul>`;
+                    
+                    resultsDiv.innerHTML = `
+                        ${dataHTML}
+                        <div class="verification-success">✅ ${data.message}</div>
+                    `;
+                })
+                .catch(error => {
+                    // Jika terjadi error (network error atau error dari server)
+                    console.error('Verification Error:', error);
+                    const errorMessage = error.error || 'Terjadi kesalahan yang tidak diketahui.';
+                    resultsDiv.innerHTML = `<div class="verification-failed">❌ GAGAL: ${errorMessage}</div>`;
+                });
         });
     </script>
 </body>
