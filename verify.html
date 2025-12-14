@@ -3,85 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hasil Verifikasi KTM</title>
+    <title>SISURATS2 - Verifikasi KTM Sementara</title>
     
-    <!-- Library untuk membuat Hash SHA256 (untuk verifikasi) -->
+    <!-- Library Font Awesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Library untuk membuat Hash SHA256 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
 
     <style>
+        /* --- CSS Variables untuk Tema --- */
+        :root {
+            --primary-color: #004A7C;
+            --secondary-color: #0056b3;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-color: #dee2e6;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: var(--font-family);
             margin: 0;
+            padding: 25px;
+            background: linear-gradient(135deg, #f4f7f6 0%, #e9ecef 100%);
+            color: var(--dark-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .verification-container {
+            width: 100%;
+            max-width: 450px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden; /* Membuat sudut header dan footer mengikuti container */
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
             padding: 20px;
-            background-color: #f4f7f6;
-            color: #333;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .header i {
+            margin-right: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        /* --- Loading State --- */
+        .loading-state {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            padding: 40px;
+            color: #6c757d;
         }
-        .container {
-            width: 100%;
-            max-width: 500px;
-            padding: 30px;
-            border-radius: 10px;
-            background-color: #ffffff;
-            border: 1px solid #ddd;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
+        .loading-state i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
         }
-        h1 {
-            color: #004A7C;
-            margin-top: 0;
+
+        /* --- Status Card --- */
+        .status-card {
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            text-align: left;
+            transition: all 0.3s ease;
         }
+        .status-card i {
+            font-size: 2rem;
+            margin-right: 15px;
+        }
+        .status-card h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .status-card p {
+            margin: 5px 0 0 0;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .status-card.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: var(--success-color);
+        }
+        .status-card.failed {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: var(--danger-color);
+        }
+
+        /* --- Data Card --- */
+        .data-card {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            padding: 5px; /* Padding untuk ul */
+            margin-top: 20px;
+        }
+        .data-card h3 {
+            margin: 0;
+            padding: 15px;
+            font-size: 1rem;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
         .data-list {
             list-style-type: none;
             padding: 0;
-            text-align: left;
-            margin: 20px 0;
+            margin: 0;
         }
         .data-list li {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 5px;
             display: flex;
-            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .data-list li:last-child {
+            border-bottom: none;
+        }
+        .data-list .icon {
+            color: var(--primary-color);
+            width: 25px;
+            text-align: center;
+            margin-right: 15px;
+            font-size: 1.1rem;
         }
         .data-list .label {
-            font-weight: bold;
+            font-weight: 600;
             color: #495057;
+            flex-basis: 120px; /* Lebar tetap untuk label */
+            text-align: left;
         }
         .data-list .value {
-            color: #212529;
-            word-break: break-all;
+            color: var(--dark-color);
+            font-weight: 500;
+            text-align: right;
+            flex-grow: 1;
         }
-        .verification-success {
-            color: #155724;
-            font-weight: bold;
-            padding: 15px;
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            border-radius: 5px;
+
+        /* --- Animasi --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .verification-failed {
-            color: #721c24;
-            font-weight: bold;
-            padding: 15px;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 5px;
-        }
+
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Verifikasi KTM Sementara</h1>
-        <div id="results">
-            <p>Memuat data verifikasi...</p>
+    <div class="verification-container">
+        <div class="header">
+            <i class="fas fa-qrcode"></i>
+            Verifikasi KTM Sementara
+        </div>
+        <div class="content" id="results">
+            <!-- State loading akan ditampilkan saat halaman dimuat -->
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Memverifikasi data...</p>
+            </div>
         </div>
     </div>
 
@@ -100,36 +201,66 @@
 
             // Periksa apakah semua parameter ada
             if (!nim || !tanggal || !hashFromUrl) {
-                resultsDiv.innerHTML = `<div class="verification-failed">❌ GAGAL: Data verifikasi tidak lengkap atau URL tidak valid.</div>`;
+                resultsDiv.innerHTML = `
+                    <div class="status-card failed">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                            <h2>Verifikasi Gagal</h2>
+                            <p>Data verifikasi tidak lengkap atau URL tidak valid.</p>
+                        </div>
+                    </div>
+                `;
                 return;
             }
 
-            // --- TAMPILKAN DATA DARI URL ---
-            let dataHTML = '<ul class="data-list">';
-            dataHTML += `<li><span class="label">NIM Mahasiswa:</span><span class="value">${nim}</span></li>`;
-            dataHTML += `<li><span class="label">Tanggal Dibuat:</span><span class="value">${tanggal}</span></li>`;
-            dataHTML += `</ul>`;
-
             // --- LAKUKAN VERIFIKASI HASH ---
-            // 1. Buat ulang string yang di-hash di Python
             const stringToHash = `${nim}-${tanggal}-${NAMA_PETUGAS_PYTHON}`;
-            
-            // 2. Hash string tersebut
             const generatedHash = sha256(stringToHash);
-
-            // 3. Bandingkan hash yang dihasilkan dengan hash dari URL
-            let statusHTML = '';
+            
+            let finalHTML = '';
             if (generatedHash === hashFromUrl) {
-                statusHTML = `<div class="verification-success">✅ VERIFIKASI BERHASIL: QR Code ASLI dan data VALID.</div>`;
+                // --- JIKA BERHASIL ---
+                finalHTML = `
+                    <div class="status-card success">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <h2>Verifikasi Berhasil</h2>
+                            <p>KTM Sementara ini ASLI dan VALID.</p>
+                        </div>
+                    </div>
+                    <div class="data-card">
+                        <h3>Detail Data Mahasiswa</h3>
+                        <ul class="data-list">
+                            <li>
+                                <i class="fas fa-id-card icon"></i>
+                                <span class="label">NIM</span>
+                                <span class="value">${nim}</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-calendar-alt icon"></i>
+                                <span class="label">Tanggal Dibuat</span>
+                                <span class="value">${tanggal}</span>
+                            </li>
+                        </ul>
+                    </div>
+                `;
             } else {
-                statusHTML = `<div class="verification-failed">❌ VERIFIKASI GAGAL: Hash tidak cocok. QR Code mungkin telah dipalsukan.</div>`;
+                // --- JIKA GAGAL ---
+                finalHTML = `
+                    <div class="status-card failed">
+                        <i class="fas fa-times-circle"></i>
+                        <div>
+                            <h2>Verifikasi Gagal</h2>
+                            <p>QR Code tidak dikenal atau data telah diubah.</p>
+                        </div>
+                    </div>
+                `;
             }
 
-            // Tampilkan hasil akhir
-            resultsDiv.innerHTML = `
-                ${dataHTML}
-                ${statusHTML}
-            `;
+            // Tampilkan hasil akhir dengan animasi
+            setTimeout(() => {
+                resultsDiv.innerHTML = finalHTML;
+            }, 500); // Delay 0.5 detik untuk efek loading
         });
     </script>
 </body>
