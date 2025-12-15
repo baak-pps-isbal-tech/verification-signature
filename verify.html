@@ -423,6 +423,12 @@
                 console.log("Token dari QR:", tokenString);
                 console.log("Token Hari Ini (Client UTC):", todayToken);
                 console.log("Token Kemarin (Client UTC):", yesterdayToken);
+                
+                // Tambahkan debug untuk melihat perbedaan
+                const todayDate = new Date();
+                const yesterdayDate = new Date(Date.now() - 86400000);
+                console.log("Tanggal Hari Ini (ISO):", todayDate.toISOString());
+                console.log("Tanggal Kemarin (ISO):", yesterdayDate.toISOString());
                 console.log("-------------------------");
 
                 // Token valid jika cocok dengan salah satu dari token yang diharapkan
