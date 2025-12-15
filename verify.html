@@ -5,48 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SISURATS2 - Verifikasi KTM Sementara</title>
     
-    <!-- Library Font Awesome untuk Ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- Library untuk membuat Hash SHA256 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha512/0.8.0/sha512.min.js"></script> <!-- SHA512 -->
 
     <style>
-        /* --- CSS Variables untuk Tema --- */
+        /* CSS tidak berubah */
         :root {
             --primary-color: #004A7C;
             --secondary-color: #0056b3;
             --success-color: #28a745;
             --danger-color: #dc3545;
+            --warning-color: #ffc107;
             --light-color: #f8f9fa;
             --dark-color: #343a40;
             --border-color: #dee2e6;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-
-        /* --- PERUBAHAN: Overlay untuk Efek Popup --- */
         body {
             font-family: var(--font-family);
             margin: 0;
             padding: 0;
-            /* Background akan diatur oleh overlay */
+            background-color: #f0f2f5;
         }
-        
         .popup-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7); /* Latar belakang gelap transparan */
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             animation: fadeIn 0.3s ease-out;
         }
-
-        /* --- PERUBAHAN: Container untuk Popup --- */
         .verification-container {
             width: 100%;
             max-width: 450px;
@@ -56,10 +51,9 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            margin: 20px; /* Jarak dari tepi layar pada mobile */
+            margin: 20px;
             animation: slideUp 0.4s ease-out;
         }
-
         .header {
             background-color: var(--primary-color);
             color: white;
@@ -67,15 +61,12 @@
             font-size: 1.5rem;
             font-weight: 600;
         }
-        
         .header i {
             margin-right: 10px;
         }
-
         .content {
             padding: 30px;
         }
-
         .loading-state {
             display: flex;
             flex-direction: column;
@@ -88,7 +79,6 @@
             font-size: 2.5rem;
             margin-bottom: 15px;
         }
-
         .status-card {
             padding: 20px;
             border-radius: 8px;
@@ -111,22 +101,9 @@
             font-size: 0.9rem;
             opacity: 0.8;
         }
-        .status-card.success {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: var(--success-color);
-        }
-        .status-card.failed {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: var(--danger-color);
-        }
-        .status-card.warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-            color: #856404;
-        }
-
+        .status-card.success { background-color: #d4edda; border: 1px solid #c3e6cb; color: var(--success-color); }
+        .status-card.failed { background-color: #f8d7da; border: 1px solid #f5c6cb; color: var(--danger-color); }
+        .status-card.warning { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; }
         .data-card {
             background-color: var(--light-color);
             border-radius: 8px;
@@ -140,7 +117,6 @@
             color: var(--primary-color);
             border-bottom: 1px solid var(--border-color);
         }
-
         .data-list {
             list-style-type: none;
             padding: 0;
@@ -152,9 +128,7 @@
             padding: 15px;
             border-bottom: 1px solid var(--border-color);
         }
-        .data-list li:last-child {
-            border-bottom: none;
-        }
+        .data-list li:last-child { border-bottom: none; }
         .data-list .icon {
             color: var(--primary-color);
             width: 25px;
@@ -174,10 +148,8 @@
             text-align: right;
             flex-grow: 1;
         }
-        
-        /* --- TAMBAHAN: Style untuk Footer --- */
         .footer {
-            margin-top: auto; /* Mendorong footer ke bawah */
+            margin-top: auto;
             padding: 15px;
             background-color: var(--light-color);
             border-top: 1px solid var(--border-color);
@@ -185,25 +157,14 @@
             color: #6c757d;
             text-align: center;
         }
-
-        /* --- PERUBAHAN: Animasi --- */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-
-    <!-- --- PERUBAHAN: Overlay untuk Popup --- -->
     <div class="popup-overlay">
         <div class="verification-container">
             <div class="header">
-                <i class="fas fa-qrcode"></i>
                 Verifikasi QR Code: KTM Sementara PPs
             </div>
             <div class="content" id="results">
@@ -212,7 +173,6 @@
                     <p>Memverifikasi data...</p>
                 </div>
             </div>
-            <!-- --- TAMBAHAN: Footer --- -->
             <div class="footer">
                 IT Division BAAK Program Pascasarjana - 00173
             </div>
@@ -223,7 +183,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const NAMA_PETUGAS_PYTHON = "R Burham Isnanto F., S.Si., M.Kom., M.M.";
             const SECRET_KEY = "ISB_ATMA_LUHUR_KTM_2023_SECURE_KEY";
-            const ALGORITHM_VERSION = "1.0";
+            const ALGORITHM_VERSION = "2.0";
 
             const urlParams = new URLSearchParams(window.location.search);
             const version = urlParams.get('v');
@@ -232,214 +192,195 @@
             const resultsDiv = document.getElementById('results');
 
             if (!version || !encryptedData) {
-                resultsDiv.innerHTML = `
-                    <div class="status-card failed">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <div>
-                            <h2>Verifikasi Gagal</h2>
-                            <p>Data verifikasi tidak lengkap atau URL tidak valid.</p>
-                        </div>
-                    </div>
-                `;
+                resultsDiv.innerHTML = `<div class="status-card failed"><i class="fas fa-exclamation-circle"></i><div><h2>Verifikasi Gagal</h2><p>Data verifikasi tidak lengkap atau URL tidak valid.</p></div></div>`;
                 return;
             }
 
-            // --- TAMBAHAN: Fungsi untuk algoritma hash kustom ---
+            // --- PENINGKATAN: Fungsi CRC32 untuk checksum ---
+            function crc32(str) {
+                // Implementasi sederhana CRC32 di JavaScript
+                let table = [];
+                for (let i = 0; i < 256; i++) {
+                    let c = i;
+                    for (let j = 0; j < 8; j++) {
+                        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+                    }
+                    table[i] = c;
+                }
+                let crc = 0 ^ (-1);
+                for (let i = 0; i < str.length; i++) {
+                    crc = (crc >>> 8) ^ table[(crc ^ str.charCodeAt(i)) & 0xFF];
+                }
+                return (crc ^ (-1)) >>> 0;
+            }
+
+            // --- PENINGKATAN: Fungsi untuk algoritma hash kustom bertingkat ---
+            function generateSBox(key) {
+                const sBox = [];
+                for (let i = 0; i < 256; i++) {
+                    sBox[i] = i;
+                }
+                let j = 0;
+                for (let i = 0; i < 256; i++) {
+                    j = (j + sBox[i] + key.charCodeAt(i % key.length)) % 256;
+                    [sBox[i], sBox[j]] = [sBox[j], sBox[i]];
+                }
+                return sBox;
+            }
+
+            function applySBox(data, sBox) {
+                const result = new Uint8Array(data.length);
+                for (let i = 0; i < data.length; i++) {
+                    result[i] = sBox[data[i]];
+                }
+                return result;
+            }
+            
+            function stringToUint8Array(str) {
+                const arr = new Uint8Array(str.length);
+                for (let i = 0, j = str.length; i < j; ++i) {
+                    arr[i] = str.charCodeAt(i);
+                }
+                return arr;
+            }
+
+            function uint8ArrayToString(arr) {
+                return String.fromCharCode.apply(null, arr);
+            }
+
             function customHash(data) {
-                // Langkah 1: Hash data dengan SHA-256
-                const sha256Hash = sha256(data);
+                // Langkah 1: Hash awal dengan SHA-512
+                const initialHash = sha512.array(data);
                 
-                // Langkah 2: Bagi hasil hash menjadi 4 bagian
-                const partLength = Math.floor(sha256Hash.length / 4);
-                const parts = [
-                    sha256Hash.substring(0, partLength),
-                    sha256Hash.substring(partLength, 2*partLength),
-                    sha256Hash.substring(2*partLength, 3*partLength),
-                    sha256Hash.substring(3*partLength)
-                ];
+                // Langkah 2: Buat S-Box dinamis
+                const sBox = generateSBox(SECRET_KEY);
                 
-                // Langkah 3: Rotasi setiap bagian
-                const rotatedParts = [];
-                for (let i = 0; i < parts.length; i++) {
-                    const part = parts[i];
-                    // Rotasi berdasarkan posisi (1, 2, 3, 4)
-                    const rotation = (i + 1) % part.length;
-                    const rotatedPart = part.substring(rotation) + part.substring(0, rotation);
-                    rotatedParts.push(rotatedPart);
+                // Langkah 3: Lakukan substitusi byte
+                const substitutedData = applySBox(initialHash, sBox);
+                
+                // Langkah 4: Hash hasil substitusi
+                const secondHash = sha256(substitutedData);
+                
+                // Langkah 5: XOR dengan bagian dari SECRET_KEY
+                const keyHash = sha256(SECRET_KEY);
+                let xorResult = '';
+                for (let i = 0; i < secondHash.length; i++) {
+                    xorResult += String.fromCharCode(secondHash.charCodeAt(i) ^ keyHash.charCodeAt(i));
                 }
                 
-                // Langkah 4: Gabungkan kembali dengan kunci rahasia
-                const combined = rotatedParts.join('') + SECRET_KEY;
-                
-                // Langkah 5: Hash lagi dengan SHA-256
-                const finalHash = sha256(combined);
+                // Langkah 6: Hash final
+                const finalHash = sha256(xorResult);
                 
                 return finalHash;
             }
 
-            // --- TAMBAHAN: Fungsi untuk dekripsi data QR ---
+            // --- PENINGKATAN: Fungsi untuk dekripsi data QR ---
+            function pkcs7Unpad(data) {
+                const paddingLength = data[data.length - 1];
+                return data.subarray(0, data.length - paddingLength);
+            }
+
             function decryptQrData(encryptedData) {
                 try {
-                    // Ambil checksum (4 karakter terakhir)
-                    const checksum = encryptedData.substring(encryptedData.length - 4);
-                    const encodedData = encryptedData.substring(0, encryptedData.length - 4);
+                    // Ambil checksum (8 karakter terakhir)
+                    const checksum = encryptedData.substring(encryptedData.length - 8);
+                    const encodedData = encryptedData.substring(0, encryptedData.length - 8);
                     
-                    // Verifikasi checksum
-                    const calculatedChecksum = customHash(encodedData).substring(0, 4);
+                    // Verifikasi checksum CRC32
+                    const calculatedChecksum = crc32(encodedData).toString(16).padStart(8, '0');
                     if (checksum !== calculatedChecksum) {
-                        throw new Error("Checksum tidak valid");
+                        throw new Error("CRC32 checksum tidak valid");
                     }
                     
                     // Base64 decode
-                    const decodedBytes = atob(encodedData);
+                    const decodedBytes = Uint8Array.from(atob(encodedData), c => c.charCodeAt(0));
                     
-                    // XOR cipher dengan kunci rahasia
-                    let decryptedData = '';
+                    const keyBytes = stringToUint8Array(SECRET_KEY);
+                    const reversedKeyBytes = stringToUint8Array(SECRET_KEY.split('').reverse().join(''));
+                    
+                    // Stage 1: XOR dengan kunci yang dibalik
+                    let stage1Bytes = new Uint8Array(decodedBytes.length);
                     for (let i = 0; i < decodedBytes.length; i++) {
-                        const charCode = decodedBytes.charCodeAt(i);
-                        const keyCharCode = SECRET_KEY.charCodeAt(i % SECRET_KEY.length);
-                        decryptedData += String.fromCharCode(charCode ^ keyCharCode);
+                        stage1Bytes[i] = decodedBytes[i] ^ reversedKeyBytes[i % reversedKeyBytes.length];
                     }
+
+                    // Stage 2: XOR dengan kunci asli
+                    let decryptedBytes = new Uint8Array(stage1Bytes.length);
+                    for (let i = 0; i < stage1Bytes.length; i++) {
+                        decryptedBytes[i] = stage1Bytes[i] ^ keyBytes[i % keyBytes.length];
+                    }
+
+                    // Unpad data
+                    const unpaddedData = pkcs7Unpad(decryptedBytes);
                     
-                    return decryptedData;
+                    return uint8ArrayToString(unpaddedData);
                 } catch (error) {
                     console.error("Error saat mendekripsi data:", error);
                     return null;
                 }
             }
 
-            // --- TAMBAHAN: Fungsi untuk validasi token waktu ---
-            function validateTimeBasedToken(nim, token) {
-                // Ambil tanggal hari ini dalam format YYYY-MM-DD
-                const today = new Date().toISOString().split('T')[0];
-                
-                // Gabungkan dengan NIM dan kunci rahasia
-                const combined = `${nim}-${today}-${SECRET_KEY}`;
-                
-                // Hash dengan algoritma kustom
-                const expectedToken = customHash(combined);
-                
-                // Token valid jika cocok dengan yang diharapkan
-                return token === expectedToken;
+            // --- PENINGKATAN: Fungsi untuk validasi token waktu dengan jendela ---
+            function validateTimeBasedToken(nim, tokenString) {
+                const tokens = tokenString.split('|');
+                if (tokens.length !== 2) return false;
+
+                const createTokenForDate = (dateObj) => {
+                    const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+                    const combined = `${nim}-${dateStr}-${SECRET_KEY}`;
+                    return customHash(combined);
+                };
+
+                const todayToken = createTokenForDate(new Date());
+                const yesterdayToken = createTokenForDate(new Date(Date.now() - 86400000)); // 86400000 ms = 1 hari
+
+                return tokens[0] === todayToken || tokens[1] === yesterdayToken;
             }
 
             function formatTimestamp(timestampStr) {
                 const date = new Date(timestampStr);
-                const options = {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    timeZoneName: 'short'
-                };
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' };
                 return date.toLocaleDateString('id-ID', options);
             }
 
-            // --- PERUBAHAN: Proses verifikasi ---
+            // --- Proses Verifikasi ---
             let finalHTML = '';
-            
             try {
-                // Dekripsi data
                 const decryptedData = decryptQrData(encryptedData);
+                if (!decryptedData) throw new Error("Data tidak dapat didekripsi");
                 
-                if (!decryptedData) {
-                    throw new Error("Data tidak dapat didekripsi");
-                }
-                
-                // Pisahkan data (format: nim|tanggal|hash|serial|token)
                 const [nim, createdAt, hash, serialNumber, timeToken] = decryptedData.split('|');
+                if (!nim || !createdAt || !hash || !serialNumber || !timeToken) throw new Error("Format data tidak valid");
                 
-                if (!nim || !createdAt || !hash || !serialNumber || !timeToken) {
-                    throw new Error("Format data tidak valid");
-                }
-                
-                // Validasi versi algoritma
                 if (version !== ALGORITHM_VERSION) {
-                    finalHTML = `
-                        <div class="status-card warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <div>
-                                <h2>Peringatan Versi</h2>
-                                <p>Versi algoritma tidak cocok. Silakan perbarui aplikasi verifikasi.</p>
-                            </div>
-                        </div>
-                    `;
+                    finalHTML = `<div class="status-card warning"><i class="fas fa-exclamation-triangle"></i><div><h2>Peringatan Versi</h2><p>Versi algoritma tidak cocok. Silakan perbarui aplikasi verifikasi.</p></div></div>`;
                 } else {
-                    // Validasi hash
                     const stringToHash = `${nim}-${createdAt}-${NAMA_PETUGAS_PYTHON}-${serialNumber}`;
                     const generatedHash = customHash(stringToHash);
-                    
-                    // Validasi token waktu
                     const isTimeTokenValid = validateTimeBasedToken(nim, timeToken);
                     
                     if (generatedHash === hash) {
                         const formattedDate = formatTimestamp(createdAt);
-                        
                         finalHTML = `
-                            <div class="status-card success">
-                                <i class="fas fa-check-circle"></i>
-                                <div>
-                                    <h2>Verifikasi Berhasil</h2>
-                                    <p>QR Code VALID.</p>
-                                </div>
-                            </div>
-                            <div class="data-card">
-                                <h3>Detail Data Mahasiswa</h3>
+                            <div class="status-card success"><i class="fas fa-check-circle"></i><div><h2>Verifikasi Berhasil</h2><p>QR Code VALID.</p></div></div>
+                            <div class="data-card"><h3>Detail Data Mahasiswa</h3>
                                 <ul class="data-list">
-                                    <li>
-                                        <i class="fas fa-id-card icon"></i>
-                                        <span class="label">NIM</span>
-                                        <span class="value">${nim}</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-barcode icon"></i>
-                                        <span class="label">Serial Number</span>
-                                        <span class="value">${serialNumber}</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-clock icon"></i>
-                                        <span class="label">Dibuat Pada</span>
-                                        <span class="value">${formattedDate}</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-shield-alt icon"></i>
-                                        <span class="label">Token Waktu</span>
-                                        <span class="value">${isTimeTokenValid ? 'Valid' : 'Tidak Valid'}</span>
-                                    </li>
+                                    <li><i class="fas fa-id-card icon"></i><span class="label">NIM</span><span class="value">${nim}</span></li>
+                                    <li><i class="fas fa-barcode icon"></i><span class="label">Serial Number</span><span class="value">${serialNumber}</span></li>
+                                    <li><i class="fas fa-clock icon"></i><span class="label">Dibuat Pada</span><span class="value">${formattedDate}</span></li>
+                                    <li><i class="fas fa-shield-alt icon"></i><span class="label">Token Waktu</span><span class="value">${isTimeTokenValid ? 'Valid' : 'Tidak Valid'}</span></li>
                                 </ul>
-                            </div>
-                        `;
+                            </div>`;
                     } else {
-                        finalHTML = `
-                            <div class="status-card failed">
-                                <i class="fas fa-times-circle"></i>
-                                <div>
-                                    <h2>Verifikasi Gagal</h2>
-                                    <p>QR Code tidak valid atau telah dimodifikasi.</p>
-                                </div>
-                            </div>
-                        `;
+                        finalHTML = `<div class="status-card failed"><i class="fas fa-times-circle"></i><div><h2>Verifikasi Gagal</h2><p>QR Code tidak valid atau telah dimodifikasi.</p></div></div>`;
                     }
                 }
             } catch (error) {
                 console.error("Error saat verifikasi:", error);
-                finalHTML = `
-                    <div class="status-card failed">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <div>
-                            <h2>Verifikasi Gagal</h2>
-                            <p>Terjadi kesalahan saat memverifikasi QR Code: ${error.message}</p>
-                        </div>
-                    </div>
-                `;
+                finalHTML = `<div class="status-card failed"><i class="fas fa-exclamation-circle"></i><div><h2>Verifikasi Gagal</h2><p>Terjadi kesalahan: ${error.message}</p></div></div>`;
             }
 
-            setTimeout(() => {
-                resultsDiv.innerHTML = finalHTML;
-            }, 500);
+            setTimeout(() => { resultsDiv.innerHTML = finalHTML; }, 500);
         });
     </script>
 </body>
