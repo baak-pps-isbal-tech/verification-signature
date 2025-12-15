@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SISURATS2 - Verifikasi KTM Sementara</title>
     
+    <!-- Library Font Awesome untuk Ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Library untuk membuat Hash SHA256 dan SHA512 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha512/0.8.0/sha512.min.js"></script> <!-- SHA512 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha512/0.8.0/sha512.min.js"></script>
 
     <style>
-        /* CSS tidak berubah */
+        /* --- CSS Variables untuk Tema --- */
         :root {
             --primary-color: #004A7C;
             --secondary-color: #0056b3;
@@ -23,25 +25,31 @@
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
+
+        /* --- Style untuk Body --- */
         body {
             font-family: var(--font-family);
             margin: 0;
             padding: 0;
             background-color: #f0f2f5;
         }
+        
+        /* --- Overlay untuk Efek Popup --- */
         .popup-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.7); /* Latar belakang gelap transparan */
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             animation: fadeIn 0.3s ease-out;
         }
+
+        /* --- Container untuk Popup --- */
         .verification-container {
             width: 100%;
             max-width: 450px;
@@ -51,22 +59,28 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            margin: 20px;
+            margin: 20px; /* Jarak dari tepi layar pada mobile */
             animation: slideUp 0.4s ease-out;
         }
+
         .header {
             background-color: var(--primary-color);
             color: white;
             padding: 20px;
             font-size: 1.5rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
         }
+        
         .header i {
             margin-right: 10px;
         }
+
         .content {
             padding: 30px;
         }
+
         .loading-state {
             display: flex;
             flex-direction: column;
@@ -79,6 +93,7 @@
             font-size: 2.5rem;
             margin-bottom: 15px;
         }
+
         .status-card {
             padding: 20px;
             border-radius: 8px;
@@ -101,9 +116,22 @@
             font-size: 0.9rem;
             opacity: 0.8;
         }
-        .status-card.success { background-color: #d4edda; border: 1px solid #c3e6cb; color: var(--success-color); }
-        .status-card.failed { background-color: #f8d7da; border: 1px solid #f5c6cb; color: var(--danger-color); }
-        .status-card.warning { background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; }
+        .status-card.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: var(--success-color);
+        }
+        .status-card.failed {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: var(--danger-color);
+        }
+        .status-card.warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+        }
+
         .data-card {
             background-color: var(--light-color);
             border-radius: 8px;
@@ -117,6 +145,7 @@
             color: var(--primary-color);
             border-bottom: 1px solid var(--border-color);
         }
+
         .data-list {
             list-style-type: none;
             padding: 0;
@@ -128,7 +157,9 @@
             padding: 15px;
             border-bottom: 1px solid var(--border-color);
         }
-        .data-list li:last-child { border-bottom: none; }
+        .data-list li:last-child {
+            border-bottom: none;
+        }
         .data-list .icon {
             color: var(--primary-color);
             width: 25px;
@@ -148,8 +179,10 @@
             text-align: right;
             flex-grow: 1;
         }
+        
+        /* --- Style untuk Footer --- */
         .footer {
-            margin-top: auto;
+            margin-top: auto; /* Mendorong footer ke bawah */
             padding: 15px;
             background-color: var(--light-color);
             border-top: 1px solid var(--border-color);
@@ -157,14 +190,47 @@
             color: #6c757d;
             text-align: center;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Animasi --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Style untuk Debug Info --- */
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            font-size: 0.8rem;
+            color: #6c757d;
+            display: none;
+        }
+        .debug-info.show {
+            display: block;
+        }
+        .debug-toggle {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
+
+    <!-- --- Overlay untuk Popup --- -->
     <div class="popup-overlay">
         <div class="verification-container">
             <div class="header">
+                <i class="fas fa-qrcode"></i>
                 Verifikasi QR Code: KTM Sementara PPs
             </div>
             <div class="content" id="results">
@@ -173,6 +239,7 @@
                     <p>Memverifikasi data...</p>
                 </div>
             </div>
+            <!-- --- Footer --- -->
             <div class="footer">
                 IT Division BAAK Program Pascasarjana - 00173
             </div>
@@ -181,24 +248,35 @@
 
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
+            // Konstanta yang sama dengan Python
             const NAMA_PETUGAS_PYTHON = "R Burham Isnanto F., S.Si., M.Kom., M.M.";
             const SECRET_KEY = "ISB_ATMA_LUHUR_KTM_2023_SECURE_KEY";
             const ALGORITHM_VERSION = "2.0";
 
+            // Dapatkan parameter dari URL
             const urlParams = new URLSearchParams(window.location.search);
             const version = urlParams.get('v');
             const encryptedData = urlParams.get('d');
 
             const resultsDiv = document.getElementById('results');
 
+            // Validasi parameter
             if (!version || !encryptedData) {
-                resultsDiv.innerHTML = `<div class="status-card failed"><i class="fas fa-exclamation-circle"></i><div><h2>Verifikasi Gagal</h2><p>Data verifikasi tidak lengkap atau URL tidak valid.</p></div></div>`;
+                resultsDiv.innerHTML = `
+                    <div class="status-card failed">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                            <h2>Verifikasi Gagal</h2>
+                            <p>Data verifikasi tidak lengkap atau URL tidak valid.</p>
+                        </div>
+                    </div>
+                `;
                 return;
             }
 
-            // --- PENINGKATAN: Fungsi CRC32 untuk checksum ---
+            // --- Fungsi CRC32 untuk checksum ---
             function crc32(str) {
-                // Implementasi sederhana CRC32 di JavaScript
+                // Implementasi CRC32 di JavaScript
                 let table = [];
                 for (let i = 0; i < 256; i++) {
                     let c = i;
@@ -214,7 +292,7 @@
                 return (crc ^ (-1)) >>> 0;
             }
 
-            // --- PENINGKATAN: Fungsi untuk algoritma hash kustom bertingkat ---
+            // --- Fungsi untuk algoritma hash kustom bertingkat ---
             function generateSBox(key) {
                 const sBox = [];
                 for (let i = 0; i < 256; i++) {
@@ -274,7 +352,7 @@
                 return finalHash;
             }
 
-            // --- PENINGKATAN: Fungsi untuk dekripsi data QR ---
+            // --- Fungsi untuk dekripsi data QR ---
             function pkcs7Unpad(data) {
                 const paddingLength = data[data.length - 1];
                 return data.subarray(0, data.length - paddingLength);
@@ -320,31 +398,60 @@
                 }
             }
 
-            // --- PENINGKATAN: Fungsi untuk validasi token waktu dengan jendela ---
+            // --- Fungsi untuk validasi token waktu dengan jendela ---
             function validateTimeBasedToken(nim, tokenString) {
                 const tokens = tokenString.split('|');
-                if (tokens.length !== 2) return false;
+                if (tokens.length !== 2) {
+                    console.error("Format token waktu tidak valid, seharusnya mengandung '|'.");
+                    return false;
+                }
 
+                // Fungsi pembantu untuk membuat token untuk tanggal tertentu dalam UTC
                 const createTokenForDate = (dateObj) => {
-                    const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+                    // Dapatkan tanggal dalam format YYYY-MM-DD UTC
+                    const dateStr = dateObj.toISOString().split('T')[0];
                     const combined = `${nim}-${dateStr}-${SECRET_KEY}`;
                     return customHash(combined);
                 };
 
+                // Buat token yang diharapkan untuk hari ini (UTC) dan kemarin (UTC)
                 const todayToken = createTokenForDate(new Date());
                 const yesterdayToken = createTokenForDate(new Date(Date.now() - 86400000)); // 86400000 ms = 1 hari
 
-                return tokens[0] === todayToken || tokens[1] === yesterdayToken;
+                // --- DEBUG: Tampilkan token ke konsol untuk pemeriksaan ---
+                console.log("--- Debug Token Waktu ---");
+                console.log("Token dari QR:", tokenString);
+                console.log("Token Hari Ini (Client UTC):", todayToken);
+                console.log("Token Kemarin (Client UTC):", yesterdayToken);
+                console.log("-------------------------");
+
+                // Token valid jika cocok dengan salah satu dari token yang diharapkan
+                const isValid = tokens[0] === todayToken || tokens[1] === yesterdayToken;
+                if (!isValid) {
+                    console.warn("Token waktu tidak cocok. Kemungkinan besar karena perbedaan zona waktu atau jam yang tidak akurat di perangkat klien.");
+                }
+                return isValid;
             }
 
             function formatTimestamp(timestampStr) {
                 const date = new Date(timestampStr);
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' };
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit', 
+                    timeZoneName: 'short' 
+                };
                 return date.toLocaleDateString('id-ID', options);
             }
 
             // --- Proses Verifikasi ---
             let finalHTML = '';
+            let debugInfo = '';
+            
             try {
                 const decryptedData = decryptQrData(encryptedData);
                 if (!decryptedData) throw new Error("Data tidak dapat didekripsi");
@@ -353,34 +460,106 @@
                 if (!nim || !createdAt || !hash || !serialNumber || !timeToken) throw new Error("Format data tidak valid");
                 
                 if (version !== ALGORITHM_VERSION) {
-                    finalHTML = `<div class="status-card warning"><i class="fas fa-exclamation-triangle"></i><div><h2>Peringatan Versi</h2><p>Versi algoritma tidak cocok. Silakan perbarui aplikasi verifikasi.</p></div></div>`;
+                    finalHTML = `
+                        <div class="status-card warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                <h2>Peringatan Versi</h2>
+                                <p>Versi algoritma tidak cocok. Silakan perbarui aplikasi verifikasi.</p>
+                            </div>
+                        </div>
+                    `;
                 } else {
                     const stringToHash = `${nim}-${createdAt}-${NAMA_PETUGAS_PYTHON}-${serialNumber}`;
                     const generatedHash = customHash(stringToHash);
+                    
+                    // Panggil fungsi validasi token
                     const isTimeTokenValid = validateTimeBasedToken(nim, timeToken);
+                    
+                    // Simpan informasi debug
+                    debugInfo = `
+                        <div class="debug-info" id="debugInfo">
+                            <h4>Informasi Debug:</h4>
+                            <p><strong>NIM:</strong> ${nim}</p>
+                            <p><strong>Tanggal Dibuat:</strong> ${createdAt}</p>
+                            <p><strong>Serial Number:</strong> ${serialNumber}</p>
+                            <p><strong>Hash dari QR:</strong> ${hash}</p>
+                            <p><strong>Hash Dihitung:</strong> ${generatedHash}</p>
+                            <p><strong>Token Waktu:</strong> ${timeToken}</p>
+                            <p><strong>Token Valid:</strong> ${isTimeTokenValid ? 'Ya' : 'Tidak'}</p>
+                        </div>
+                        <div class="debug-toggle" onclick="document.getElementById('debugInfo').classList.toggle('show')">
+                            Tampilkan/Sembunyikan Informasi Debug
+                        </div>
+                    `;
                     
                     if (generatedHash === hash) {
                         const formattedDate = formatTimestamp(createdAt);
                         finalHTML = `
-                            <div class="status-card success"><i class="fas fa-check-circle"></i><div><h2>Verifikasi Berhasil</h2><p>QR Code VALID.</p></div></div>
-                            <div class="data-card"><h3>Detail Data Mahasiswa</h3>
+                            <div class="status-card success">
+                                <i class="fas fa-check-circle"></i>
+                                <div>
+                                    <h2>Verifikasi Berhasil</h2>
+                                    <p>QR Code VALID.</p>
+                                </div>
+                            </div>
+                            <div class="data-card">
+                                <h3>Detail Data Mahasiswa</h3>
                                 <ul class="data-list">
-                                    <li><i class="fas fa-id-card icon"></i><span class="label">NIM</span><span class="value">${nim}</span></li>
-                                    <li><i class="fas fa-barcode icon"></i><span class="label">Serial Number</span><span class="value">${serialNumber}</span></li>
-                                    <li><i class="fas fa-clock icon"></i><span class="label">Dibuat Pada</span><span class="value">${formattedDate}</span></li>
-                                    <li><i class="fas fa-shield-alt icon"></i><span class="label">Token Waktu</span><span class="value">${isTimeTokenValid ? 'Valid' : 'Tidak Valid'}</span></li>
+                                    <li>
+                                        <i class="fas fa-id-card icon"></i>
+                                        <span class="label">NIM</span>
+                                        <span class="value">${nim}</span>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-barcode icon"></i>
+                                        <span class="label">Serial Number</span>
+                                        <span class="value">${serialNumber}</span>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-clock icon"></i>
+                                        <span class="label">Dibuat Pada</span>
+                                        <span class="value">${formattedDate}</span>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-shield-alt icon"></i>
+                                        <span class="label">Token Waktu</span>
+                                        <span class="value">${isTimeTokenValid ? 'Valid' : 'Tidak Valid'}</span>
+                                    </li>
                                 </ul>
-                            </div>`;
+                            </div>
+                            ${debugInfo}
+                        `;
                     } else {
-                        finalHTML = `<div class="status-card failed"><i class="fas fa-times-circle"></i><div><h2>Verifikasi Gagal</h2><p>QR Code tidak valid atau telah dimodifikasi.</p></div></div>`;
+                        finalHTML = `
+                            <div class="status-card failed">
+                                <i class="fas fa-times-circle"></i>
+                                <div>
+                                    <h2>Verifikasi Gagal</h2>
+                                    <p>QR Code tidak valid atau telah dimodifikasi.</p>
+                                </div>
+                            </div>
+                            ${debugInfo}
+                        `;
                     }
                 }
             } catch (error) {
                 console.error("Error saat verifikasi:", error);
-                finalHTML = `<div class="status-card failed"><i class="fas fa-exclamation-circle"></i><div><h2>Verifikasi Gagal</h2><p>Terjadi kesalahan: ${error.message}</p></div></div>`;
+                finalHTML = `
+                    <div class="status-card failed">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                            <h2>Verifikasi Gagal</h2>
+                            <p>Terjadi kesalahan: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
             }
 
-            setTimeout(() => { resultsDiv.innerHTML = finalHTML; }, 500);
+            // Tampilkan hasil setelah jeda singkat untuk efek loading
+            setTimeout(() => {
+                resultsDiv.innerHTML = finalHTML;
+            }, 500);
         });
     </script>
 </body>
