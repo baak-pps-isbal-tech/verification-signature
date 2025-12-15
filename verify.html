@@ -7,9 +7,8 @@
     
     <!-- Library Font Awesome untuk Ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- Library untuk membuat Hash SHA256 dan SHA512 -->
+    <!-- Library untuk membuat Hash SHA256 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha512/0.8.0/sha512.min.js"></script>
 
     <style>
         /* --- CSS Variables untuk Tema --- */
@@ -18,7 +17,6 @@
             --secondary-color: #0056b3;
             --success-color: #28a745;
             --danger-color: #dc3545;
-            --warning-color: #ffc107;
             --light-color: #f8f9fa;
             --dark-color: #343a40;
             --border-color: #dee2e6;
@@ -26,15 +24,14 @@
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* --- Style untuk Body --- */
+        /* --- PERUBAHAN: Overlay untuk Efek Popup --- */
         body {
             font-family: var(--font-family);
             margin: 0;
             padding: 0;
-            background-color: #f0f2f5;
+            /* Background akan diatur oleh overlay */
         }
         
-        /* --- Overlay untuk Efek Popup --- */
         .popup-overlay {
             position: fixed;
             top: 0;
@@ -49,7 +46,7 @@
             animation: fadeIn 0.3s ease-out;
         }
 
-        /* --- Container untuk Popup --- */
+        /* --- PERUBAHAN: Container untuk Popup --- */
         .verification-container {
             width: 100%;
             max-width: 450px;
@@ -69,8 +66,6 @@
             padding: 20px;
             font-size: 1.5rem;
             font-weight: 600;
-            display: flex;
-            align-items: center;
         }
         
         .header i {
@@ -180,7 +175,7 @@
             flex-grow: 1;
         }
         
-        /* --- Style untuk Footer --- */
+        /* --- TAMBAHAN: Style untuk Footer --- */
         .footer {
             margin-top: auto; /* Mendorong footer ke bawah */
             padding: 15px;
@@ -191,7 +186,7 @@
             text-align: center;
         }
 
-        /* --- Animasi --- */
+        /* --- PERUBAHAN: Animasi --- */
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -200,33 +195,11 @@
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        /* --- Style untuk Debug Info --- */
-        .debug-info {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary-color);
-            font-size: 0.8rem;
-            color: #6c757d;
-            display: none;
-        }
-        .debug-info.show {
-            display: block;
-        }
-        .debug-toggle {
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: var(--primary-color);
-            cursor: pointer;
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
 
-    <!-- --- Overlay untuk Popup --- -->
+    <!-- --- PERUBAHAN: Overlay untuk Popup --- -->
     <div class="popup-overlay">
         <div class="verification-container">
             <div class="header">
@@ -239,7 +212,7 @@
                     <p>Memverifikasi data...</p>
                 </div>
             </div>
-            <!-- --- Footer --- -->
+            <!-- --- TAMBAHAN: Footer --- -->
             <div class="footer">
                 IT Division BAAK Program Pascasarjana - 00173
             </div>
@@ -248,19 +221,16 @@
 
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            // Konstanta yang sama dengan Python
             const NAMA_PETUGAS_PYTHON = "R Burham Isnanto F., S.Si., M.Kom., M.M.";
             const SECRET_KEY = "ISB_ATMA_LUHUR_KTM_2023_SECURE_KEY";
-            const ALGORITHM_VERSION = "2.0";
+            const ALGORITHM_VERSION = "1.0";
 
-            // Dapatkan parameter dari URL
             const urlParams = new URLSearchParams(window.location.search);
             const version = urlParams.get('v');
             const encryptedData = urlParams.get('d');
 
             const resultsDiv = document.getElementById('results');
 
-            // Validasi parameter
             if (!version || !encryptedData) {
                 resultsDiv.innerHTML = `
                     <div class="status-card failed">
@@ -274,197 +244,119 @@
                 return;
             }
 
-            // --- Fungsi CRC32 untuk checksum ---
-            function crc32(str) {
-                // Implementasi CRC32 di JavaScript
-                let table = [];
-                for (let i = 0; i < 256; i++) {
-                    let c = i;
-                    for (let j = 0; j < 8; j++) {
-                        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-                    }
-                    table[i] = c;
-                }
-                let crc = 0 ^ (-1);
-                for (let i = 0; i < str.length; i++) {
-                    crc = (crc >>> 8) ^ table[(crc ^ str.charCodeAt(i)) & 0xFF];
-                }
-                return (crc ^ (-1)) >>> 0;
-            }
-
-            // --- Fungsi untuk algoritma hash kustom bertingkat ---
-            function generateSBox(key) {
-                const sBox = [];
-                for (let i = 0; i < 256; i++) {
-                    sBox[i] = i;
-                }
-                let j = 0;
-                for (let i = 0; i < 256; i++) {
-                    j = (j + sBox[i] + key.charCodeAt(i % key.length)) % 256;
-                    [sBox[i], sBox[j]] = [sBox[j], sBox[i]];
-                }
-                return sBox;
-            }
-
-            function applySBox(data, sBox) {
-                const result = new Uint8Array(data.length);
-                for (let i = 0; i < data.length; i++) {
-                    result[i] = sBox[data[i]];
-                }
-                return result;
-            }
-            
-            function stringToUint8Array(str) {
-                const arr = new Uint8Array(str.length);
-                for (let i = 0, j = str.length; i < j; ++i) {
-                    arr[i] = str.charCodeAt(i);
-                }
-                return arr;
-            }
-
-            function uint8ArrayToString(arr) {
-                return String.fromCharCode.apply(null, arr);
-            }
-
+            // --- TAMBAHAN: Fungsi untuk algoritma hash kustom ---
             function customHash(data) {
-                // Langkah 1: Hash awal dengan SHA-512
-                const initialHash = sha512.array(data);
+                // Langkah 1: Hash data dengan SHA-256
+                const sha256Hash = sha256(data);
                 
-                // Langkah 2: Buat S-Box dinamis
-                const sBox = generateSBox(SECRET_KEY);
+                // Langkah 2: Bagi hasil hash menjadi 4 bagian
+                const partLength = Math.floor(sha256Hash.length / 4);
+                const parts = [
+                    sha256Hash.substring(0, partLength),
+                    sha256Hash.substring(partLength, 2*partLength),
+                    sha256Hash.substring(2*partLength, 3*partLength),
+                    sha256Hash.substring(3*partLength)
+                ];
                 
-                // Langkah 3: Lakukan substitusi byte
-                const substitutedData = applySBox(initialHash, sBox);
-                
-                // Langkah 4: Hash hasil substitusi
-                const secondHash = sha256(substitutedData);
-                
-                // Langkah 5: XOR dengan bagian dari SECRET_KEY
-                const keyHash = sha256(SECRET_KEY);
-                let xorResult = '';
-                for (let i = 0; i < secondHash.length; i++) {
-                    xorResult += String.fromCharCode(secondHash.charCodeAt(i) ^ keyHash.charCodeAt(i));
+                // Langkah 3: Rotasi setiap bagian
+                const rotatedParts = [];
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    // Rotasi berdasarkan posisi (1, 2, 3, 4)
+                    const rotation = (i + 1) % part.length;
+                    const rotatedPart = part.substring(rotation) + part.substring(0, rotation);
+                    rotatedParts.push(rotatedPart);
                 }
                 
-                // Langkah 6: Hash final
-                const finalHash = sha256(xorResult);
+                // Langkah 4: Gabungkan kembali dengan kunci rahasia
+                const combined = rotatedParts.join('') + SECRET_KEY;
+                
+                // Langkah 5: Hash lagi dengan SHA-256
+                const finalHash = sha256(combined);
                 
                 return finalHash;
             }
 
-            // --- Fungsi untuk dekripsi data QR ---
-            function pkcs7Unpad(data) {
-                const paddingLength = data[data.length - 1];
-                return data.subarray(0, data.length - paddingLength);
-            }
-
+            // --- TAMBAHAN: Fungsi untuk dekripsi data QR ---
             function decryptQrData(encryptedData) {
                 try {
-                    // Ambil checksum (8 karakter terakhir)
-                    const checksum = encryptedData.substring(encryptedData.length - 8);
-                    const encodedData = encryptedData.substring(0, encryptedData.length - 8);
+                    // Ambil checksum (4 karakter terakhir)
+                    const checksum = encryptedData.substring(encryptedData.length - 4);
+                    const encodedData = encryptedData.substring(0, encryptedData.length - 4);
                     
-                    // Verifikasi checksum CRC32
-                    const calculatedChecksum = crc32(encodedData).toString(16).padStart(8, '0');
+                    // Verifikasi checksum
+                    const calculatedChecksum = customHash(encodedData).substring(0, 4);
                     if (checksum !== calculatedChecksum) {
-                        throw new Error("CRC32 checksum tidak valid");
+                        throw new Error("Checksum tidak valid");
                     }
                     
                     // Base64 decode
-                    const decodedBytes = Uint8Array.from(atob(encodedData), c => c.charCodeAt(0));
+                    const decodedBytes = atob(encodedData);
                     
-                    const keyBytes = stringToUint8Array(SECRET_KEY);
-                    const reversedKeyBytes = stringToUint8Array(SECRET_KEY.split('').reverse().join(''));
-                    
-                    // Stage 1: XOR dengan kunci yang dibalik
-                    let stage1Bytes = new Uint8Array(decodedBytes.length);
+                    // XOR cipher dengan kunci rahasia
+                    let decryptedData = '';
                     for (let i = 0; i < decodedBytes.length; i++) {
-                        stage1Bytes[i] = decodedBytes[i] ^ reversedKeyBytes[i % reversedKeyBytes.length];
+                        const charCode = decodedBytes.charCodeAt(i);
+                        const keyCharCode = SECRET_KEY.charCodeAt(i % SECRET_KEY.length);
+                        decryptedData += String.fromCharCode(charCode ^ keyCharCode);
                     }
-
-                    // Stage 2: XOR dengan kunci asli
-                    let decryptedBytes = new Uint8Array(stage1Bytes.length);
-                    for (let i = 0; i < stage1Bytes.length; i++) {
-                        decryptedBytes[i] = stage1Bytes[i] ^ keyBytes[i % keyBytes.length];
-                    }
-
-                    // Unpad data
-                    const unpaddedData = pkcs7Unpad(decryptedBytes);
                     
-                    return uint8ArrayToString(unpaddedData);
+                    return decryptedData;
                 } catch (error) {
                     console.error("Error saat mendekripsi data:", error);
                     return null;
                 }
             }
 
-            // --- Fungsi untuk validasi token waktu dengan jendela ---
-            function validateTimeBasedToken(nim, tokenString) {
-                const tokens = tokenString.split('|');
-                if (tokens.length !== 2) {
-                    console.error("Format token waktu tidak valid, seharusnya mengandung '|'.");
-                    return false;
-                }
-
-                // Fungsi pembantu untuk membuat token untuk tanggal tertentu dalam UTC
-                const createTokenForDate = (dateObj) => {
-                    // Dapatkan tanggal dalam format YYYY-MM-DD UTC
-                    const dateStr = dateObj.toISOString().split('T')[0];
-                    const combined = `${nim}-${dateStr}-${SECRET_KEY}`;
-                    return customHash(combined);
-                };
-
-                // Buat token yang diharapkan untuk hari ini (UTC) dan kemarin (UTC)
-                const todayToken = createTokenForDate(new Date());
-                const yesterdayToken = createTokenForDate(new Date(Date.now() - 86400000)); // 86400000 ms = 1 hari
-
-                // --- DEBUG: Tampilkan token ke konsol untuk pemeriksaan ---
-                console.log("--- Debug Token Waktu ---");
-                console.log("Token dari QR:", tokenString);
-                console.log("Token Hari Ini (Client UTC):", todayToken);
-                console.log("Token Kemarin (Client UTC):", yesterdayToken);
+            // --- TAMBAHAN: Fungsi untuk validasi token waktu ---
+            function validateTimeBasedToken(nim, token) {
+                // Ambil tanggal hari ini dalam format YYYY-MM-DD
+                const today = new Date().toISOString().split('T')[0];
                 
-                // Tambahkan debug untuk melihat perbedaan
-                const todayDate = new Date();
-                const yesterdayDate = new Date(Date.now() - 86400000);
-                console.log("Tanggal Hari Ini (ISO):", todayDate.toISOString());
-                console.log("Tanggal Kemarin (ISO):", yesterdayDate.toISOString());
-                console.log("-------------------------");
-
-                // Token valid jika cocok dengan salah satu dari token yang diharapkan
-                const isValid = tokens[0] === todayToken || tokens[1] === yesterdayToken;
-                if (!isValid) {
-                    console.warn("Token waktu tidak cocok. Kemungkinan besar karena perbedaan zona waktu atau jam yang tidak akurat di perangkat klien.");
-                }
-                return isValid;
+                // Gabungkan dengan NIM dan kunci rahasia
+                const combined = `${nim}-${today}-${SECRET_KEY}`;
+                
+                // Hash dengan algoritma kustom
+                const expectedToken = customHash(combined);
+                
+                // Token valid jika cocok dengan yang diharapkan
+                return token === expectedToken;
             }
 
             function formatTimestamp(timestampStr) {
                 const date = new Date(timestampStr);
-                const options = { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit', 
-                    timeZoneName: 'short' 
+                const options = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZoneName: 'short'
                 };
                 return date.toLocaleDateString('id-ID', options);
             }
 
-            // --- Proses Verifikasi ---
+            // --- PERUBAHAN: Proses verifikasi ---
             let finalHTML = '';
-            let debugInfo = '';
             
             try {
+                // Dekripsi data
                 const decryptedData = decryptQrData(encryptedData);
-                if (!decryptedData) throw new Error("Data tidak dapat didekripsi");
                 
+                if (!decryptedData) {
+                    throw new Error("Data tidak dapat didekripsi");
+                }
+                
+                // Pisahkan data (format: nim|tanggal|hash|serial|token)
                 const [nim, createdAt, hash, serialNumber, timeToken] = decryptedData.split('|');
-                if (!nim || !createdAt || !hash || !serialNumber || !timeToken) throw new Error("Format data tidak valid");
                 
+                if (!nim || !createdAt || !hash || !serialNumber || !timeToken) {
+                    throw new Error("Format data tidak valid");
+                }
+                
+                // Validasi versi algoritma
                 if (version !== ALGORITHM_VERSION) {
                     finalHTML = `
                         <div class="status-card warning">
@@ -476,31 +368,16 @@
                         </div>
                     `;
                 } else {
+                    // Validasi hash
                     const stringToHash = `${nim}-${createdAt}-${NAMA_PETUGAS_PYTHON}-${serialNumber}`;
                     const generatedHash = customHash(stringToHash);
                     
-                    // Panggil fungsi validasi token
+                    // Validasi token waktu
                     const isTimeTokenValid = validateTimeBasedToken(nim, timeToken);
-                    
-                    // Simpan informasi debug
-                    debugInfo = `
-                        <div class="debug-info" id="debugInfo">
-                            <h4>Informasi Debug:</h4>
-                            <p><strong>NIM:</strong> ${nim}</p>
-                            <p><strong>Tanggal Dibuat:</strong> ${createdAt}</p>
-                            <p><strong>Serial Number:</strong> ${serialNumber}</p>
-                            <p><strong>Hash dari QR:</strong> ${hash}</p>
-                            <p><strong>Hash Dihitung:</strong> ${generatedHash}</p>
-                            <p><strong>Token Waktu:</strong> ${timeToken}</p>
-                            <p><strong>Token Valid:</strong> ${isTimeTokenValid ? 'Ya' : 'Tidak'}</p>
-                        </div>
-                        <div class="debug-toggle" onclick="document.getElementById('debugInfo').classList.toggle('show')">
-                            Tampilkan/Sembunyikan Informasi Debug
-                        </div>
-                    `;
                     
                     if (generatedHash === hash) {
                         const formattedDate = formatTimestamp(createdAt);
+                        
                         finalHTML = `
                             <div class="status-card success">
                                 <i class="fas fa-check-circle"></i>
@@ -534,7 +411,6 @@
                                     </li>
                                 </ul>
                             </div>
-                            ${debugInfo}
                         `;
                     } else {
                         finalHTML = `
@@ -545,7 +421,6 @@
                                     <p>QR Code tidak valid atau telah dimodifikasi.</p>
                                 </div>
                             </div>
-                            ${debugInfo}
                         `;
                     }
                 }
@@ -556,13 +431,12 @@
                         <i class="fas fa-exclamation-circle"></i>
                         <div>
                             <h2>Verifikasi Gagal</h2>
-                            <p>Terjadi kesalahan: ${error.message}</p>
+                            <p>Terjadi kesalahan saat memverifikasi QR Code: ${error.message}</p>
                         </div>
                     </div>
                 `;
             }
 
-            // Tampilkan hasil setelah jeda singkat untuk efek loading
             setTimeout(() => {
                 resultsDiv.innerHTML = finalHTML;
             }, 500);
