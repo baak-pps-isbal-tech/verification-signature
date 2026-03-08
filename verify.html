@@ -16,7 +16,6 @@
             --primary-gradient: linear-gradient(135deg, #004A7C 0%, #0056b3 100%);
             --success-gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             --danger-gradient: linear-gradient(135deg, #dc3545 0%, #bd2130 100%);
-            --warning-gradient: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
             --text-dark: #2d3436;
             --text-muted: #636e72;
             --bg-light: #f5f6fa;
@@ -63,7 +62,6 @@
             position: relative;
         }
 
-        /* Logo Style */
         .card-header img {
             width: 70px;
             height: 70px;
@@ -92,7 +90,6 @@
         /* --- Content Section --- */
         .card-body {
             padding: 0;
-            position: relative; /* Untuk penempatan seal */
         }
 
         /* --- Status Message --- */
@@ -100,7 +97,6 @@
             padding: 25px;
             text-align: center;
             border-bottom: 1px solid #eee;
-            position: relative;
         }
 
         .status-badge {
@@ -117,7 +113,6 @@
 
         .status-badge.success { background: var(--success-gradient); }
         .status-badge.failed { background: var(--danger-gradient); }
-        .status-badge.warning { background: var(--warning-gradient); color: #333; }
 
         .status-badge i { margin-right: 8px; font-size: 1.1rem; }
 
@@ -125,55 +120,6 @@
             color: var(--text-muted);
             font-size: 0.9rem;
             line-height: 1.5;
-        }
-
-        /* --- TAMBAHAN: Digital Seal Style --- */
-        .digital-seal {
-            position: absolute;
-            top: -20px;
-            right: 20px;
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: var(--success-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-            opacity: 0;
-            transform: scale(0.5) rotate(-15deg);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 10;
-        }
-
-        .digital-seal.show {
-            opacity: 1;
-            transform: scale(1) rotate(0deg);
-        }
-
-        .digital-seal i {
-            color: white;
-            font-size: 40px;
-        }
-
-        /* --- Security Checklist --- */
-        .security-checklist {
-            padding: 15px 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
-        }
-
-        .check-item {
-            display: flex;
-            align-items: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-        .check-item:last-child { margin-bottom: 0; }
-        .check-item i {
-            margin-right: 8px;
-            color: #28a745;
         }
 
         /* --- Data List --- */
@@ -234,18 +180,56 @@
             word-break: break-word;
         }
 
+        /* --- Signature Properties Box (NEW) --- */
+        .signature-properties {
+            margin: 20px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.8rem;
+        }
+
+        .sig-prop-header {
+            background: #e9ecef;
+            padding: 8px 15px;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+        }
+        .sig-prop-header i { margin-right: 8px; }
+
+        .sig-prop-body {
+            padding: 0 15px;
+        }
+
+        .sig-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .sig-row:last-child { border-bottom: none; }
+        
+        .sig-label { color: var(--text-muted); }
+        .sig-val { color: var(--text-dark); font-weight: 500; text-align: right; }
+
         /* --- Footer --- */
         .card-footer {
             background: #fafafa;
             padding: 15px;
             text-align: center;
-            font-size: 0.75rem;
-            color: #a4b0be;
-            line-height: 1.5;
+            font-size: 0.8rem;
+            color: #6c757d;
+            line-height: 1.6;
         }
-        .card-footer strong {
-            color: #004A7C;
+        .card-footer a {
+            color: #0056b3;
+            text-decoration: none;
+            font-weight: 600;
         }
+        .card-footer a:hover { text-decoration: underline; }
 
         /* --- Loading State --- */
         .loading-state {
@@ -278,11 +262,10 @@
     <div class="verification-wrapper">
         <div class="card" id="mainCard">
             <div class="card-header">
-                <!-- Logo -->
                 <img src="Logo_ISB_atma_luhur_final.png" alt="Logo ISB Atma Luhur">
-                <h1><b>Verifikasi Dokumen Digital</b></h1>
+                <h1>Verifikasi Dokumen Digital</h1>
                 <div class="sub-title">
-                    SISURATS2<br>Sistem Informasi Surat Akademik S2 Program Pascasarjana<br>
+                    SISURATS2 v.1.0.3<br>Sistem Informasi Surat Akademik S2<br>Program Pascasarjana<br>
                     Institut Sains dan Bisnis Atma Luhur
                 </div>
             </div>
@@ -293,8 +276,8 @@
                 </div>
             </div>
             <div class="card-footer">
-                Dokumen ini sah secara elektronik.<br>
-                Diterbitkan oleh <strong>Program Pascasarjana ISB Atma Luhur</strong>.
+                IT Division BAAK Program Pascasarjana - ISB Atma Luhur<br>
+                <a href="https://pasca.atmaluhur.ac.id" target="_blank">pasca.atmaluhur.ac.id</a>
             </div>
         </div>
     </div>
@@ -364,11 +347,19 @@
                 const date = new Date(dateStr);
                 return date.toLocaleDateString('id-ID', { 
                     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+            }
+
+            function formatShortDate(dateStr) {
+                 const date = new Date(dateStr);
+                 return date.toLocaleDateString('id-ID', { 
+                    year: 'numeric', month: 'short', day: 'numeric',
                     hour: '2-digit', minute: '2-digit'
                 });
             }
 
-            // Cek masa berlaku 6 bulan (sekitar 180 hari)
+            // Cek masa berlaku 6 bulan (180 hari)
             function checkExpiry(createdAtStr) {
                 const createdDate = new Date(createdAtStr);
                 const now = new Date();
@@ -376,29 +367,20 @@
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 
                 if (diffDays < 0) return { valid: false, text: "Tanggal Tidak Valid" };
-                if (diffDays > 180) return { valid: false, text: `Masa Berlaku Habis (${diffDays} Hari)` };
+                if (diffDays > 180) return { valid: false, text: `Masa Berlaku Habis` };
                 
-                return { valid: true, text: `Aktif (Sisa ${180 - diffDays} Hari)` };
+                return { valid: true, text: `Valid hingga 6 Bulan` };
             }
 
             function updateUISuccess(data) {
-                resultsDiv.innerHTML = `
-                    <div class="digital-seal" id="seal">
-                        <i class="fas fa-certificate"></i>
-                    </div>
+                const expiryClass = data.expiry.valid ? 'success' : 'failed';
 
+                resultsDiv.innerHTML = `
                     <div class="status-section">
-                        <div class="status-badge success"><i class="fas fa-check-circle"></i> DOKUMEN VALID</div>
-                        <div class="status-desc">Dokumen ini telah diverifikasi keasliannya secara kriptografis.</div>
+                        <div class="status-badge ${expiryClass}"><i class="fas ${data.expiry.valid ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${data.expiry.valid ? 'DOKUMEN VALID' : 'DOKUMEN KADALUARSA'}</div>
+                        <div class="status-desc">${data.expiry.valid ? 'Tanda tangan digital valid dan terverifikasi.' : 'Masa berlaku dokumen telah berakhir.'}</div>
                     </div>
                     
-                    <!-- Security Checklist -->
-                    <div class="security-checklist">
-                        <div class="check-item"><i class="fas fa-shield-alt"></i> Identitas Penandatangan Terverifikasi</div>
-                        <div class="check-item"><i class="fas fa-lock"></i> Integritas Data Terjamin</div>
-                        <div class="check-item"><i class="fas fa-check-double"></i> Dokumen Diterbitkan Oleh Instansi Resmi</div>
-                    </div>
-
                     <div class="data-list-container">
                         <div class="data-list-header">Identitas Mahasiswa</div>
                         <ul class="data-list">
@@ -416,44 +398,44 @@
                             </li>
                         </ul>
                         
-                        <div class="data-list-header" style="margin-top: 25px;">Detail Verifikasi</div>
-                        <ul class="data-list">
-                            <li class="data-item">
-                                <span class="data-label"><i class="fas fa-user-tie"></i> Pejabat</span>
-                                <span class="data-value">${data.pejabat}</span>
-                            </li>
-                            <li class="data-item">
-                                <span class="data-label"><i class="fas fa-briefcase"></i> Jabatan</span>
-                                <span class="data-value">${data.jabatan}</span>
-                            </li>
-                            <li class="data-item">
-                                <span class="data-label"><i class="fas fa-calendar"></i> Tanggal Cetak</span>
-                                <span class="data-value">${formatDate(data.createdAt)}</span>
-                            </li>
-                             <li class="data-item">
-                                <span class="data-label"><i class="fas fa-key"></i> ID Unik</span>
-                                <span class="data-value" style="font-family: monospace; font-size: 0.8rem;">${data.serial}</span>
-                            </li>
-                             <li class="data-item">
-                                <span class="data-label"><i class="fas fa-clock"></i> Status Dokumen</span>
-                                <span class="data-value" style="color: ${data.expiry.valid ? '#28a745' : '#dc3545'}">
-                                    <i class="fas ${data.expiry.valid ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
-                                    ${data.expiry.text}
-                                </span>
-                            </li>
-                            <li class="data-item">
-                                <span class="data-label"><i class="fas fa-print"></i> Dicetak Oleh</span>
-                                <span class="data-value">${data.adminInfo}</span>
-                            </li>
-                        </ul>
+                        <!-- Signature Properties Section -->
+                        <div class="signature-properties">
+                            <div class="sig-prop-header">
+                                <i class="fas fa-signature"></i> Properti Tanda Tangan Digital
+                            </div>
+                            <div class="sig-prop-body">
+                                <div class="sig-row">
+                                    <span class="sig-label">Nama Penandatangan:</span>
+                                    <span class="sig-val">${data.pejabat}</span>
+                                </div>
+                                <div class="sig-row">
+                                    <span class="sig-label">Jabatan:</span>
+                                    <span class="sig-val">${data.jabatan}</span>
+                                </div>
+                                <div class="sig-row">
+                                    <span class="sig-label">Waktu Penandatanganan:</span>
+                                    <span class="sig-val">${formatShortDate(data.createdAt)}</span>
+                                </div>
+                                <div class="sig-row">
+                                    <span class="sig-label">ID Unik Dokumen:</span>
+                                    <span class="sig-val" style="font-family: monospace; font-size: 0.75rem;">${data.serial}</span>
+                                </div>
+                                <div class="sig-row">
+                                    <span class="sig-label">Penerbit:</span>
+                                    <span class="sig-val">Program Pascasarjana ISB Atma Luhur</span>
+                                </div>
+                                <div class="sig-row">
+                                    <span class="sig-label">Integritas Data:</span>
+                                    <span class="sig-val" style="color: #28a745;"><i class="fas fa-check-circle"></i> Terverifikasi</span>
+                                </div>
+                                <div class="sig-row">
+                                    <span class="sig-label">Dicetak Oleh:</span>
+                                    <span class="sig-val">${data.adminInfo}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `;
-
-                // Trigger Seal Animation
-                setTimeout(() => {
-                    const seal = document.getElementById('seal');
-                    if(seal) seal.classList.add('show');
-                }, 300);
             }
 
             function updateUIFailed(title, message) {
@@ -471,7 +453,6 @@
                 
                 if (!decryptedData) throw new Error("Gagal dekripsi");
 
-                // Format: nim|tanggal|pejabat|jabatan|nama_mhs|nama_surat|hash|serial|admin_info
                 const parts = decryptedData.split('|');
                 if (parts.length < 9) throw new Error("Format data tidak lengkap");
 
@@ -490,7 +471,6 @@
                     return;
                 }
 
-                // Validasi Hash
                 const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${nama}-${serial}-${adminInfo}`;
                 const generatedHash = customHash(stringToHash);
 
@@ -500,7 +480,7 @@
                         nim, createdAt, pejabat, jabatan, nama, namaSurat, serial, expiry, adminInfo
                     });
                 } else {
-                    updateUIFailed("Data Tidak Cocok", "Hash tidak valid. Data mungkin telah diubah.");
+                    updateUIFailed("Data Tidak Cocok", "Hash tidak valid. Dokumen mungkin telah diubah.");
                 }
 
             } catch (error) {
