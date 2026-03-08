@@ -180,7 +180,7 @@
             word-break: break-word;
         }
 
-        /* --- Signature Properties Box (NEW) --- */
+        /* --- Signature Properties Box --- */
         .signature-properties {
             margin: 20px;
             background: #f8f9fa;
@@ -276,7 +276,7 @@
                 </div>
             </div>
             <div class="card-footer">
-                IT Division BAAK Program Pascasarjana - ISB Atma Luhur<br>
+                IT Division Biro Administrasi Akademik & Kemahasiswaan<br>Program Pascasarjana - ISB Atma Luhur<br>
                 <a href="https://pasca.atmaluhur.ac.id" target="_blank">pasca.atmaluhur.ac.id</a>
             </div>
         </div>
@@ -359,7 +359,7 @@
                 });
             }
 
-            // Cek masa berlaku 6 bulan (180 hari)
+            // --- PERBAIKAN: Logika Cek Masa Berlaku 6 Bulan (1 Semester) ---
             function checkExpiry(createdAtStr) {
                 const createdDate = new Date(createdAtStr);
                 const now = new Date();
@@ -367,9 +367,11 @@
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 
                 if (diffDays < 0) return { valid: false, text: "Tanggal Tidak Valid" };
-                if (diffDays > 180) return { valid: false, text: `Masa Berlaku Habis` };
+                if (diffDays > 180) {
+                    return { valid: false, text: `Kadaluarsa (${diffDays} Hari)` };
+                }
                 
-                return { valid: true, text: `Valid hingga 6 Bulan` };
+                return { valid: true, text: `Aktif (Sisa ${180 - diffDays} Hari)` };
             }
 
             function updateUISuccess(data) {
@@ -415,6 +417,12 @@
                                 <div class="sig-row">
                                     <span class="sig-label">Waktu Penandatanganan:</span>
                                     <span class="sig-val">${formatShortDate(data.createdAt)}</span>
+                                </div>
+                                <div class="sig-row">
+                                    <span class="sig-label">Masa Berlaku Dokumen:</span>
+                                    <span class="sig-val" style="color: ${data.expiry.valid ? '#28a745' : '#dc3545'}; font-weight: 600;">
+                                        ${data.expiry.text}
+                                    </span>
                                 </div>
                                 <div class="sig-row">
                                     <span class="sig-label">ID Unik Dokumen:</span>
