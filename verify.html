@@ -9,8 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- SHA256 Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
-    <!-- Pako Library untuk Zlib Decompression -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 
     <style>
         /* --- Modern Reset & Variables --- */
@@ -90,7 +88,9 @@
         }
 
         /* --- Content Section --- */
-        .card-body { padding: 0; }
+        .card-body {
+            padding: 0;
+        }
 
         /* --- Status Message --- */
         .status-section {
@@ -113,6 +113,7 @@
 
         .status-badge.success { background: var(--success-gradient); }
         .status-badge.failed { background: var(--danger-gradient); }
+
         .status-badge i { margin-right: 8px; font-size: 1.1rem; }
 
         .status-desc {
@@ -122,7 +123,9 @@
         }
 
         /* --- Data List --- */
-        .data-list-container { padding: 20px; }
+        .data-list-container {
+            padding: 20px;
+        }
 
         .data-list-header {
             font-size: 0.8rem;
@@ -150,6 +153,7 @@
             padding: 12px 0;
             border-bottom: 1px dashed #eee;
         }
+
         .data-item:last-child { border-bottom: none; }
 
         .data-label {
@@ -159,7 +163,13 @@
             display: flex;
             align-items: center;
         }
-        .data-label i { margin-right: 8px; width: 16px; text-align: center; color: #a4b0be; }
+
+        .data-label i {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
+            color: #a4b0be;
+        }
 
         .data-value {
             font-weight: 600;
@@ -179,13 +189,21 @@
             color: #6c757d;
             line-height: 1.6;
         }
-        .card-footer a { color: #0056b3; text-decoration: none; font-weight: 600; }
+        .card-footer a {
+            color: #0056b3;
+            text-decoration: none;
+            font-weight: 600;
+        }
         .card-footer a:hover { text-decoration: underline; }
 
         /* --- Loading State --- */
-        .loading-state { padding: 60px 20px; text-align: center; }
+        .loading-state {
+            padding: 60px 20px;
+            text-align: center;
+        }
         .spinner {
-            width: 40px; height: 40px;
+            width: 40px;
+            height: 40px;
             border: 4px solid #f3f3f3;
             border-top: 4px solid var(--primary-color);
             border-radius: 50%;
@@ -193,8 +211,15 @@
             animation: spin 1s linear infinite;
         }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* --- Animations --- */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -224,6 +249,7 @@
 
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
+            // Konstanta Keamanan
             const SECRET_KEY = "ISB_ATMA_LUHUR_KTM_2023_SECURE_KEY";
             const ALGORITHM_VERSION = "1.0";
 
@@ -268,30 +294,27 @@
                     const calculatedChecksum = customHash(encodedData).substring(0, 4);
                     if (checksum !== calculatedChecksum) throw new Error("Checksum Error");
                     
-                    // Base64 Decode
                     const decodedBytes = atob(encodedData);
                     
-                    // XOR Decrypt
-                    let decryptedCompressed = new Uint8Array(decodedBytes.length);
+                    let decryptedData = '';
                     for (let i = 0; i < decodedBytes.length; i++) {
                         const charCode = decodedBytes.charCodeAt(i);
                         const keyCharCode = SECRET_KEY.charCodeAt(i % SECRET_KEY.length);
-                        decryptedCompressed[i] = charCode ^ keyCharCode;
+                        decryptedData += String.fromCharCode(charCode ^ keyCharCode);
                     }
-                    
-                    // Zlib Decompress (Pako)
-                    const decompressedData = pako.inflate(decryptedCompressed, { to: 'string' });
-                    
-                    return decompressedData;
+                    return decryptedData;
                 } catch (error) {
-                    console.error("Error saat dekompresi:", error);
                     return null;
                 }
             }
 
+            // --- PERBAIKAN: Fungsi Format Tanggal ---
             function formatShortDate(dateStr) {
-                // Tambahkan 'Z' untuk UTC
-                const date = new Date(dateStr + 'Z');
+                // Python mengirim format "YYYY-MM-DD HH:MM:SS" dalam UTC.
+                // Kita perlu menambahkan 'Z' agar JavaScript tahu itu UTC.
+                // Jika tidak, JS menganggapnya waktu lokal.
+                const date = new Date(dateStr + 'Z'); 
+                
                 return date.toLocaleDateString('id-ID', { 
                     year: 'numeric', month: 'short', day: 'numeric',
                     hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
@@ -299,13 +322,16 @@
             }
 
             function checkExpiry(createdAtStr) {
+                // Gunakan parsing UTC yang sama
                 const createdDate = new Date(createdAtStr + 'Z');
                 const now = new Date();
                 const diffTime = now - createdDate;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 
                 if (diffDays < 0) return { valid: false, text: "Tanggal Tidak Valid" };
-                if (diffDays > 180) return { valid: false, text: `Kadaluarsa` };
+                if (diffDays > 180) {
+                    return { valid: false, text: `Kadaluarsa (${diffDays} Hari)` };
+                }
                 
                 return { valid: true, text: `Aktif (Sisa ${180 - diffDays} Hari)` };
             }
@@ -336,6 +362,7 @@
                             </li>
                         </ul>
                         
+                        <!-- DIPERBAIKI: Kembali ke format List standar, menghapus Signature Properties Box -->
                         <div class="data-list-header" style="margin-top: 25px;">Detail Verifikasi</div>
                         <ul class="data-list">
                             <li class="data-item">
@@ -383,7 +410,7 @@
             try {
                 const decryptedData = decryptQrData(encryptedData);
                 
-                if (!decryptedData) throw new Error("Gagal dekompresi data");
+                if (!decryptedData) throw new Error("Gagal dekripsi");
 
                 const parts = decryptedData.split('|');
                 if (parts.length < 9) throw new Error("Format data tidak lengkap");
