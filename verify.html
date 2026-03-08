@@ -356,6 +356,11 @@
                                 <span class="data-label"><i class="fas fa-id-card"></i> NIM</span>
                                 <span class="data-value">${data.nim}</span>
                             </li>
+                            <!-- TAMBAHAN: Nomor Surat di atas Jenis Surat -->
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-hashtag"></i> Nomor Surat</span>
+                                <span class="data-value" style="font-size: 0.85rem;">${data.nomorSuratFull}</span>
+                            </li>
                             <li class="data-item">
                                 <span class="data-label"><i class="fas fa-file-alt"></i> Jenis Surat</span>
                                 <span class="data-value">${data.namaSurat}</span>
@@ -413,30 +418,33 @@
                 if (!decryptedData) throw new Error("Gagal dekripsi");
 
                 const parts = decryptedData.split('|');
-                if (parts.length < 9) throw new Error("Format data tidak lengkap");
+                // PERUBAHAN: Jumlah parts sekarang 10 (bertambah 1)
+                if (parts.length < 10) throw new Error("Format data tidak lengkap");
 
                 const nim = parts[0];
                 const createdAt = parts[1];
                 const pejabat = parts[2];
                 const jabatan = parts[3];
                 const nama = parts[4];
-                const namaSurat = parts[5];
-                const hash = parts[6];
-                const serial = parts[7];
-                const adminInfo = parts[8];
+                const nomorSuratFull = parts[5]; // BARU: Index 5
+                const namaSurat = parts[6];       // INDEX BERGESER: 6
+                const hash = parts[7];            // INDEX BERGESER: 7
+                const serial = parts[8];          // INDEX BERGESER: 8
+                const adminInfo = parts[9];       // INDEX BERGESER: 9
 
                 if (version !== ALGORITHM_VERSION) {
                     updateUIFailed("Versi Lama", "Versi algoritma tidak didukung.");
                     return;
                 }
 
-                const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${nama}-${serial}-${adminInfo}`;
+                // PERBAIKAN: Sesuaikan stringToHash dengan format baru
+                const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${nama}-${nomorSuratFull}-${serial}-${adminInfo}`;
                 const generatedHash = customHash(stringToHash);
 
                 if (generatedHash === hash) {
                     const expiry = checkExpiry(createdAt);
                     updateUISuccess({
-                        nim, createdAt, pejabat, jabatan, nama, namaSurat, serial, expiry, adminInfo
+                        nim, createdAt, pejabat, jabatan, nama, nomorSuratFull, namaSurat, serial, expiry, adminInfo
                     });
                 } else {
                     updateUIFailed("Data Tidak Cocok", "Hash tidak valid. Dokumen mungkin telah diubah.");
