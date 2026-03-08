@@ -3,238 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISURATS2 - Verifikasi Surat Keterangan</title>
+    <title>SISURATS2 - Verifikasi Digital</title>
     
-    <!-- Library Font Awesome untuk Ikon -->
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- Library untuk membuat Hash SHA256 -->
+    <!-- SHA256 Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
 
     <style>
-        /* --- CSS Variables untuk Tema --- */
+        /* --- Modern Reset & Variables --- */
         :root {
-            --primary-color: #004A7C;
-            --secondary-color: #0056b3;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --light-color: #f8f9fa;
-            --dark-color: #343a40;
-            --border-color: #dee2e6;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --primary-gradient: linear-gradient(135deg, #004A7C 0%, #0056b3 100%);
+            --success-gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            --danger-gradient: linear-gradient(135deg, #dc3545 0%, #bd2130 100%);
+            --warning-gradient: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            --text-dark: #2d3436;
+            --text-muted: #636e72;
+            --bg-light: #f5f6fa;
+            --white: #ffffff;
+            --card-shadow: 0 10px 40px rgba(0,0,0,0.15);
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            font-family: var(--font-family);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- Main Container --- */
+        .verification-wrapper {
+            width: 100%;
+            max-width: 420px;
+            margin: 20px;
+            position: relative;
+        }
+
+        /* --- Card Style --- */
+        .card {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* --- Header Section --- */
+        .card-header {
+            background: var(--primary-gradient);
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--white);
+            position: relative;
+        }
+
+        .card-header .icon-circle {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .card-header .icon-circle i {
+            font-size: 24px;
+        }
+
+        .card-header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .card-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        /* --- Content Section --- */
+        .card-body {
             padding: 0;
         }
-        
-        .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
+
+        /* --- Status Message --- */
+        .status-section {
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-badge {
+            display: inline-flex;
             align-items: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .verification-container {
-            width: 100%;
-            max-width: 450px;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            margin: 20px;
-            animation: slideUp 0.4s ease-out;
-        }
-
-        .header {
-            background-color: var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 50px;
             color: white;
-            padding: 20px;
-            font-size: 1.5rem;
             font-weight: 600;
-        }
-        
-        .header i {
-            margin-right: 10px;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            color: #6c757d;
-        }
-        .loading-state i {
-            font-size: 2.5rem;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             margin-bottom: 15px;
         }
 
-        .status-card {
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            text-align: left;
-            transition: all 0.3s ease;
-        }
-        .status-card i {
-            font-size: 2rem;
-            margin-right: 15px;
-        }
-        .status-card h2 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-        .status-card p {
-            margin: 5px 0 0 0;
+        .status-badge.success { background: var(--success-gradient); }
+        .status-badge.failed { background: var(--danger-gradient); }
+        .status-badge.warning { background: var(--warning-gradient); color: #333; }
+
+        .status-badge i { margin-right: 8px; font-size: 1.1rem; }
+
+        .status-desc {
+            color: var(--text-muted);
             font-size: 0.9rem;
-            opacity: 0.8;
-        }
-        .status-card.success {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: var(--success-color);
-        }
-        .status-card.failed {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: var(--danger-color);
-        }
-        .status-card.warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-            color: #856404;
+            line-height: 1.5;
         }
 
-        .data-card {
-            background-color: var(--light-color);
-            border-radius: 8px;
-            padding: 5px;
-            margin-top: 20px;
+        /* --- Data List --- */
+        .data-list-container {
+            padding: 20px;
         }
-        .data-card h3 {
-            margin: 0;
-            padding: 15px;
-            font-size: 1rem;
+
+        .data-list-header {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             color: var(--primary-color);
-            border-bottom: 1px solid var(--border-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 4px solid var(--primary-color);
         }
 
         .data-list {
-            list-style-type: none;
+            list-style: none;
             padding: 0;
             margin: 0;
         }
-        .data-list li {
+
+        .data-item {
             display: flex;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .data-list li:last-child {
-            border-bottom: none;
-        }
-        .data-list .icon {
-            color: var(--primary-color);
-            width: 25px;
-            text-align: center;
-            margin-right: 15px;
-            font-size: 1.1rem;
-        }
-        .data-list .label {
-            font-weight: 600;
-            color: #495057;
-            flex-basis: 120px;
-            text-align: left;
-        }
-        .data-list .value {
-            color: var(--dark-color);
-            font-weight: 500;
-            text-align: right;
-            flex-grow: 1;
-            word-break: break-word; /* Agar teks panjang tidak keluar */
-        }
-        
-        .footer {
-            margin-top: auto;
-            padding: 15px;
-            background-color: var(--light-color);
-            border-top: 1px solid var(--border-color);
-            font-size: 0.8rem;
-            color: #6c757d;
-            text-align: center;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px dashed #eee;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .data-item:last-child { border-bottom: none; }
+
+        .data-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
         }
+
+        .data-label i {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
+            color: #a4b0be;
+        }
+
+        .data-value {
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: right;
+            font-size: 0.9rem;
+            max-width: 60%;
+            word-break: break-word;
+        }
+
+        /* --- Footer --- */
+        .card-footer {
+            background: #fafafa;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #a4b0be;
+        }
+
+        /* --- Loading State --- */
+        .loading-state {
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            margin: 0 auto 20px auto;
+            animation: spin 1s linear infinite;
+        }
+
+        /* --- Animations --- */
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(50px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
-    <div class="popup-overlay">
-        <div class="verification-container">
-            <div class="header">
-                <i class="fas fa-qrcode"></i>
-                Verifikasi Dokumen Digital
+    <div class="verification-wrapper">
+        <div class="card" id="mainCard">
+            <div class="card-header">
+                <div class="icon-circle">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h1>Verifikasi Dokumen Digital</h1>
+                <p>Sistem Informasi Surat Pascasarjana</p>
             </div>
-            <div class="content" id="results">
+            <div class="card-body" id="results">
                 <div class="loading-state">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Memverifikasi data...</p>
+                    <div class="spinner"></div>
+                    <p style="color: var(--text-muted);">Memvalidasi keaslian dokumen...</p>
                 </div>
             </div>
-            <div class="footer">
-                IT Division BAAK Program Pascasarjana - 00173
+            <div class="card-footer">
+                IT Division BAAK Program Pascasarjana - ISB Atma Luhur
             </div>
         </div>
     </div>
 
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            // Kunci Rahasia (HARUS SAMA DENGAN PYTHON)
+            // Konstanta Keamanan
             const SECRET_KEY = "ISB_ATMA_LUHUR_KTM_2023_SECURE_KEY";
             const ALGORITHM_VERSION = "1.0";
 
             const urlParams = new URLSearchParams(window.location.search);
             const version = urlParams.get('v');
             const encryptedData = urlParams.get('d');
-
             const resultsDiv = document.getElementById('results');
 
             if (!version || !encryptedData) {
-                resultsDiv.innerHTML = `
-                    <div class="status-card failed">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <div>
-                            <h2>Verifikasi Gagal</h2>
-                            <p>Data verifikasi tidak lengkap atau URL tidak valid.</p>
-                        </div>
-                    </div>
-                `;
+                updateUIFailed("URL Tidak Valid", "Parameter verifikasi tidak ditemukan.");
                 return;
             }
 
@@ -267,9 +288,7 @@
                     const encodedData = encryptedData.substring(0, encryptedData.length - 4);
                     
                     const calculatedChecksum = customHash(encodedData).substring(0, 4);
-                    if (checksum !== calculatedChecksum) {
-                        throw new Error("Checksum tidak valid");
-                    }
+                    if (checksum !== calculatedChecksum) throw new Error("Checksum Error");
                     
                     const decodedBytes = atob(encodedData);
                     
@@ -279,10 +298,8 @@
                         const keyCharCode = SECRET_KEY.charCodeAt(i % SECRET_KEY.length);
                         decryptedData += String.fromCharCode(charCode ^ keyCharCode);
                     }
-                    
                     return decryptedData;
                 } catch (error) {
-                    console.error("Error saat mendekripsi data:", error);
                     return null;
                 }
             }
@@ -294,138 +311,120 @@
                 return token === expectedToken;
             }
 
-            function formatTimestamp(timestampStr) {
-                const date = new Date(timestampStr);
-                const options = {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    timeZoneName: 'short'
-                };
-                return date.toLocaleDateString('id-ID', options);
+            function formatDate(dateStr) {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('id-ID', { 
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
             }
 
-            let finalHTML = '';
-            
-            try {
-                const decryptedData = decryptQrData(encryptedData);
-                
-                if (!decryptedData) {
-                    throw new Error("Data tidak dapat didekripsi");
-                }
-                
-                // FORMAT BARU: nim|tanggal|pejabat|nama_surat|hash|serial|token
-                const dataParts = decryptedData.split('|');
-                
-                if (dataParts.length < 7) {
-                    throw new Error("Format data tidak valid (kurang dari 7 komponen)");
-                }
-
-                const nim = dataParts[0];
-                const createdAt = dataParts[1];
-                const namaPejabat = dataParts[2];
-                const namaSurat = dataParts[3];
-                const hash = dataParts[4];
-                const serialNumber = dataParts[5];
-                const timeToken = dataParts[6];
-
-                // Validasi versi algoritma
-                if (version !== ALGORITHM_VERSION) {
-                    finalHTML = `
-                        <div class="status-card warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <div>
-                                <h2>Peringatan Versi</h2>
-                                <p>Versi algoritma tidak cocok. Silakan perbarui aplikasi.</p>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // Validasi Hash Dinamis (Menggunakan variabel pejabat dari data)
-                    const stringToHash = `${nim}-${createdAt}-${namaPejabat}-${serialNumber}`;
-                    const generatedHash = customHash(stringToHash);
+            function updateUISuccess(data) {
+                resultsDiv.innerHTML = `
+                    <div class="status-section">
+                        <div class="status-badge success"><i class="fas fa-check-circle"></i> DOKUMEN VALID</div>
+                        <div class="status-desc">Dokumen ini telah diverifikasi keasliannya.</div>
+                    </div>
                     
-                    const isTimeTokenValid = validateTimeBasedToken(nim, timeToken);
-                    
-                    if (generatedHash === hash) {
-                        const formattedDate = formatTimestamp(createdAt);
+                    <div class="data-list-container">
+                        <div class="data-list-header">Detail Mahasiswa</div>
+                        <ul class="data-list">
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-user"></i> Nama</span>
+                                <span class="data-value">${data.nama}</span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-id-card"></i> NIM</span>
+                                <span class="data-value">${data.nim}</span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-file-alt"></i> Jenis Surat</span>
+                                <span class="data-value">${data.namaSurat}</span>
+                            </li>
+                        </ul>
                         
-                        finalHTML = `
-                            <div class="status-card success">
-                                <i class="fas fa-check-circle"></i>
-                                <div>
-                                    <h2>Verifikasi Berhasil</h2>
-                                    <p>Dokumen dinyatakan VALID.</p>
-                                </div>
-                            </div>
-                            <div class="data-card">
-                                <h3>Detail Dokumen</h3>
-                                <ul class="data-list">
-                                    <li>
-                                        <i class="fas fa-file-alt icon"></i>
-                                        <span class="label">Nama Surat</span>
-                                        <span class="value">${namaSurat}</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-id-card icon"></i>
-                                        <span class="label">NIM</span>
-                                        <span class="value">${nim}</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-barcode icon"></i>
-                                        <span class="label">Serial Number</span>
-                                        <span class="value">${serialNumber}</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-user-tie icon"></i>
-                                        <span class="label">Pejabat</span>
-                                        <span class="value">${namaPejabat}</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-clock icon"></i>
-                                        <span class="label">Dibuat Pada</span>
-                                        <span class="value">${formattedDate}</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-shield-alt icon"></i>
-                                        <span class="label">Token Status</span>
-                                        <span class="value">${isTimeTokenValid ? 'Valid' : 'Kadaluarsa'}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        `;
-                    } else {
-                        finalHTML = `
-                            <div class="status-card failed">
-                                <i class="fas fa-times-circle"></i>
-                                <div>
-                                    <h2>Verifikasi Gagal</h2>
-                                    <p>Dokumen tidak valid atau telah dimodifikasi.</p>
-                                </div>
-                            </div>
-                        `;
-                    }
-                }
-            } catch (error) {
-                console.error("Error saat verifikasi:", error);
-                finalHTML = `
-                    <div class="status-card failed">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <div>
-                            <h2>Verifikasi Gagal</h2>
-                            <p>Terjadi kesalahan: ${error.message}</p>
-                        </div>
+                        <div class="data-list-header" style="margin-top: 25px;">Detail Verifikasi</div>
+                        <ul class="data-list">
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-user-tie"></i> Pejabat</span>
+                                <span class="data-value">${data.pejabat}</span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-briefcase"></i> Jabatan</span>
+                                <span class="data-value">${data.jabatan}</span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-calendar"></i> Tanggal Cetak</span>
+                                <span class="data-value">${formatDate(data.createdAt)}</span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-key"></i> Serial</span>
+                                <span class="data-value" style="font-family: monospace; font-size: 0.8rem;">${data.serial}</span>
+                            </li>
+                             <li class="data-item">
+                                <span class="data-label"><i class="fas fa-clock"></i> Token Status</span>
+                                <span class="data-value" style="color: ${data.tokenValid ? '#28a745' : '#dc3545'}">
+                                    <i class="fas ${data.tokenValid ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
+                                    ${data.tokenValid ? 'Valid' : 'Tidak Valid'}
+                                </span>
+                            </li>
+                        </ul>
                     </div>
                 `;
             }
 
-            setTimeout(() => {
-                resultsDiv.innerHTML = finalHTML;
-            }, 500);
+            function updateUIFailed(title, message) {
+                resultsDiv.innerHTML = `
+                    <div class="status-section">
+                        <div class="status-badge failed"><i class="fas fa-times-circle"></i> VERIFIKASI GAGAL</div>
+                        <div class="status-desc"><strong>${title}</strong><br>${message}</div>
+                    </div>
+                `;
+            }
+
+            // --- MAIN PROCESS ---
+            try {
+                const decryptedData = decryptQrData(encryptedData);
+                
+                if (!decryptedData) throw new Error("Gagal dekripsi");
+
+                // Format: nim|tanggal|pejabat|jabatan|nama_mhs|nama_surat|hash|serial|token
+                const parts = decryptedData.split('|');
+                if (parts.length < 9) throw new Error("Format tidak lengkap");
+
+                const nim = parts[0];
+                const createdAt = parts[1];
+                const pejabat = parts[2];
+                const jabatan = parts[3];
+                const nama = parts[4];
+                const namaSurat = parts[5];
+                const hash = parts[6];
+                const serial = parts[7];
+                const token = parts[8];
+
+                if (version !== ALGORITHM_VERSION) {
+                    updateUIFailed("Versi Lama", "Versi algoritma tidak didukung.");
+                    return;
+                }
+
+                // Validasi Hash
+                // Urutan: nim-tanggal-pejabat-jabatan-nama-serial
+                const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${nama}-${serial}`;
+                const generatedHash = customHash(stringToHash);
+
+                if (generatedHash === hash) {
+                    const tokenValid = validateTimeBasedToken(nim, token);
+                    updateUISuccess({
+                        nim, createdAt, pejabat, jabatan, nama, namaSurat, serial, tokenValid
+                    });
+                } else {
+                    updateUIFailed("Data Tidak Cocok", "Hash tidak valid. Data mungkin telah diubah.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                updateUIFailed("Error Sistem", error.message);
+            }
         });
     </script>
 </body>
