@@ -180,41 +180,6 @@
             word-break: break-word;
         }
 
-        /* --- Signature Properties Box --- */
-        .signature-properties {
-            margin: 20px;
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            overflow: hidden;
-            font-size: 0.8rem;
-        }
-
-        .sig-prop-header {
-            background: #e9ecef;
-            padding: 8px 15px;
-            font-weight: 600;
-            color: #495057;
-            display: flex;
-            align-items: center;
-        }
-        .sig-prop-header i { margin-right: 8px; }
-
-        .sig-prop-body {
-            padding: 0 15px;
-        }
-
-        .sig-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .sig-row:last-child { border-bottom: none; }
-        
-        .sig-label { color: var(--text-muted); }
-        .sig-val { color: var(--text-dark); font-weight: 500; text-align: right; }
-
         /* --- Footer --- */
         .card-footer {
             background: #fafafa;
@@ -343,25 +308,22 @@
                 }
             }
 
-            function formatDate(dateStr) {
-                const date = new Date(dateStr);
-                return date.toLocaleDateString('id-ID', { 
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-                    hour: '2-digit', minute: '2-digit', second: '2-digit'
-                });
-            }
-
+            // --- PERBAIKAN: Fungsi Format Tanggal ---
             function formatShortDate(dateStr) {
-                 const date = new Date(dateStr);
-                 return date.toLocaleDateString('id-ID', { 
+                // Python mengirim format "YYYY-MM-DD HH:MM:SS" dalam UTC.
+                // Kita perlu menambahkan 'Z' agar JavaScript tahu itu UTC.
+                // Jika tidak, JS menganggapnya waktu lokal.
+                const date = new Date(dateStr + 'Z'); 
+                
+                return date.toLocaleDateString('id-ID', { 
                     year: 'numeric', month: 'short', day: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
+                    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
                 });
             }
 
-            // --- PERBAIKAN: Logika Cek Masa Berlaku 6 Bulan (1 Semester) ---
             function checkExpiry(createdAtStr) {
-                const createdDate = new Date(createdAtStr);
+                // Gunakan parsing UTC yang sama
+                const createdDate = new Date(createdAtStr + 'Z');
                 const now = new Date();
                 const diffTime = now - createdDate;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
@@ -400,48 +362,37 @@
                             </li>
                         </ul>
                         
-                        <!-- Signature Properties Section -->
-                        <div class="signature-properties">
-                            <div class="sig-prop-header">
-                                <i class="fas fa-signature"></i> Properti Tanda Tangan Digital
-                            </div>
-                            <div class="sig-prop-body">
-                                <div class="sig-row">
-                                    <span class="sig-label">Nama Penandatangan:</span>
-                                    <span class="sig-val">${data.pejabat}</span>
-                                </div>
-                                <div class="sig-row">
-                                    <span class="sig-label">Jabatan:</span>
-                                    <span class="sig-val">${data.jabatan}</span>
-                                </div>
-                                <div class="sig-row">
-                                    <span class="sig-label">Waktu Penandatanganan:</span>
-                                    <span class="sig-val">${formatShortDate(data.createdAt)}</span>
-                                </div>
-                                <div class="sig-row">
-                                    <span class="sig-label">Masa Berlaku Dokumen:</span>
-                                    <span class="sig-val" style="color: ${data.expiry.valid ? '#28a745' : '#dc3545'}; font-weight: 600;">
-                                        ${data.expiry.text}
-                                    </span>
-                                </div>
-                                <div class="sig-row">
-                                    <span class="sig-label">ID Unik Dokumen:</span>
-                                    <span class="sig-val" style="font-family: monospace; font-size: 0.75rem;">${data.serial}</span>
-                                </div>
-                                <div class="sig-row">
-                                    <span class="sig-label">Penerbit:</span>
-                                    <span class="sig-val">Program Pascasarjana ISB Atma Luhur</span>
-                                </div>
-                                <div class="sig-row">
-                                    <span class="sig-label">Integritas Data:</span>
-                                    <span class="sig-val" style="color: #28a745;"><i class="fas fa-check-circle"></i> Terverifikasi</span>
-                                </div>
-                                <div class="sig-row">
-                                    <span class="sig-label">Dicetak Oleh:</span>
-                                    <span class="sig-val">${data.adminInfo}</span>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- DIPERBAIKI: Kembali ke format List standar, menghapus Signature Properties Box -->
+                        <div class="data-list-header" style="margin-top: 25px;">Detail Verifikasi</div>
+                        <ul class="data-list">
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-user-tie"></i> Pejabat</span>
+                                <span class="data-value">${data.pejabat}</span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-briefcase"></i> Jabatan</span>
+                                <span class="data-value">${data.jabatan}</span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-calendar"></i> Tanggal Cetak</span>
+                                <span class="data-value">${formatShortDate(data.createdAt)}</span>
+                            </li>
+                             <li class="data-item">
+                                <span class="data-label"><i class="fas fa-key"></i> Serial Number</span>
+                                <span class="data-value" style="font-family: monospace; font-size: 0.8rem;">${data.serial}</span>
+                            </li>
+                             <li class="data-item">
+                                <span class="data-label"><i class="fas fa-clock"></i> Status Dokumen</span>
+                                <span class="data-value" style="color: ${data.expiry.valid ? '#28a745' : '#dc3545'}">
+                                    <i class="fas ${data.expiry.valid ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
+                                    ${data.expiry.text}
+                                </span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-print"></i> Dicetak Oleh</span>
+                                <span class="data-value">${data.adminInfo}</span>
+                            </li>
+                        </ul>
                     </div>
                 `;
             }
