@@ -92,6 +92,7 @@
         /* --- Content Section --- */
         .card-body {
             padding: 0;
+            position: relative; /* Untuk penempatan seal */
         }
 
         /* --- Status Message --- */
@@ -99,6 +100,7 @@
             padding: 25px;
             text-align: center;
             border-bottom: 1px solid #eee;
+            position: relative;
         }
 
         .status-badge {
@@ -125,6 +127,55 @@
             line-height: 1.5;
         }
 
+        /* --- TAMBAHAN: Digital Seal Style --- */
+        .digital-seal {
+            position: absolute;
+            top: -20px;
+            right: 20px;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: var(--success-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+            opacity: 0;
+            transform: scale(0.5) rotate(-15deg);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+
+        .digital-seal.show {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+
+        .digital-seal i {
+            color: white;
+            font-size: 40px;
+        }
+
+        /* --- Security Checklist --- */
+        .security-checklist {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .check-item:last-child { margin-bottom: 0; }
+        .check-item i {
+            margin-right: 8px;
+            color: #28a745;
+        }
+
         /* --- Data List --- */
         .data-list-container {
             padding: 20px;
@@ -138,7 +189,6 @@
             font-weight: 700;
             margin-bottom: 15px;
             padding: 8px 15px;
-            /* Background Style */
             background: var(--primary-gradient);
             border-radius: 4px;
             display: inline-block;
@@ -191,6 +241,10 @@
             text-align: center;
             font-size: 0.75rem;
             color: #a4b0be;
+            line-height: 1.5;
+        }
+        .card-footer strong {
+            color: #004A7C;
         }
 
         /* --- Loading State --- */
@@ -224,11 +278,11 @@
     <div class="verification-wrapper">
         <div class="card" id="mainCard">
             <div class="card-header">
-                <!-- Logo Placeholder (Ganti src dengan URL asli) -->
+                <!-- Logo -->
                 <img src="Logo_ISB_atma_luhur_final.png" alt="Logo ISB Atma Luhur">
-                <h1>Verifikasi Dokumen Digital</h1>
+                <h1><b>Verifikasi Dokumen Digital</b></h1>
                 <div class="sub-title">
-                    SISURATS2 v.1.0.3<br>Sistem Informasi Surat Akademik S2 Program Pascasarjana<br>
+                    SISURATS2<br>Sistem Informasi Surat Akademik S2 Program Pascasarjana<br>
                     Institut Sains dan Bisnis Atma Luhur
                 </div>
             </div>
@@ -239,7 +293,8 @@
                 </div>
             </div>
             <div class="card-footer">
-                IT Division BAAK Program Pascasarjana - ISB Atma Luhur
+                Dokumen ini sah secara elektronik.<br>
+                Diterbitkan oleh <strong>Program Pascasarjana ISB Atma Luhur</strong>.
             </div>
         </div>
     </div>
@@ -328,13 +383,24 @@
 
             function updateUISuccess(data) {
                 resultsDiv.innerHTML = `
+                    <div class="digital-seal" id="seal">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+
                     <div class="status-section">
                         <div class="status-badge success"><i class="fas fa-check-circle"></i> DOKUMEN VALID</div>
-                        <div class="status-desc">Dokumen ini telah diverifikasi keasliannya.</div>
+                        <div class="status-desc">Dokumen ini telah diverifikasi keasliannya secara kriptografis.</div>
                     </div>
                     
+                    <!-- Security Checklist -->
+                    <div class="security-checklist">
+                        <div class="check-item"><i class="fas fa-shield-alt"></i> Identitas Penandatangan Terverifikasi</div>
+                        <div class="check-item"><i class="fas fa-lock"></i> Integritas Data Terjamin</div>
+                        <div class="check-item"><i class="fas fa-check-double"></i> Dokumen Diterbitkan Oleh Instansi Resmi</div>
+                    </div>
+
                     <div class="data-list-container">
-                        <div class="data-list-header">Detail Mahasiswa</div>
+                        <div class="data-list-header">Identitas Mahasiswa</div>
                         <ul class="data-list">
                             <li class="data-item">
                                 <span class="data-label"><i class="fas fa-user"></i> Nama</span>
@@ -365,11 +431,11 @@
                                 <span class="data-value">${formatDate(data.createdAt)}</span>
                             </li>
                              <li class="data-item">
-                                <span class="data-label"><i class="fas fa-key"></i> Serial</span>
+                                <span class="data-label"><i class="fas fa-key"></i> ID Unik</span>
                                 <span class="data-value" style="font-family: monospace; font-size: 0.8rem;">${data.serial}</span>
                             </li>
                              <li class="data-item">
-                                <span class="data-label"><i class="fas fa-clock"></i> Status</span>
+                                <span class="data-label"><i class="fas fa-clock"></i> Status Dokumen</span>
                                 <span class="data-value" style="color: ${data.expiry.valid ? '#28a745' : '#dc3545'}">
                                     <i class="fas ${data.expiry.valid ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
                                     ${data.expiry.text}
@@ -377,12 +443,17 @@
                             </li>
                             <li class="data-item">
                                 <span class="data-label"><i class="fas fa-print"></i> Dicetak Oleh</span>
-                                <!-- PERBAIKAN: class="data-value" agar rapi kanan -->
                                 <span class="data-value">${data.adminInfo}</span>
                             </li>
                         </ul>
                     </div>
                 `;
+
+                // Trigger Seal Animation
+                setTimeout(() => {
+                    const seal = document.getElementById('seal');
+                    if(seal) seal.classList.add('show');
+                }, 300);
             }
 
             function updateUIFailed(title, message) {
@@ -400,9 +471,9 @@
                 
                 if (!decryptedData) throw new Error("Gagal dekripsi");
 
-                // Format BARU: nim|tanggal|pejabat|jabatan|nama_mhs|nama_surat|hash|serial|admin_info
+                // Format: nim|tanggal|pejabat|jabatan|nama_mhs|nama_surat|hash|serial|admin_info
                 const parts = decryptedData.split('|');
-                if (parts.length < 9) throw new Error("Format data tidak lengkap ("+parts.length+")");
+                if (parts.length < 9) throw new Error("Format data tidak lengkap");
 
                 const nim = parts[0];
                 const createdAt = parts[1];
@@ -420,7 +491,6 @@
                 }
 
                 // Validasi Hash
-                // Urutan: nim-tanggal-pejabat-jabatan-nama-serial-admin_info
                 const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${nama}-${serial}-${adminInfo}`;
                 const generatedHash = customHash(stringToHash);
 
@@ -441,4 +511,3 @@
     </script>
 </body>
 </html>
-
