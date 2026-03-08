@@ -63,21 +63,16 @@
             position: relative;
         }
 
-        .card-header .icon-circle {
-            width: 60px;
-            height: 60px;
-            background: rgba(255,255,255,0.2);
+        /* Logo Style */
+        .card-header img {
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px auto;
-            backdrop-filter: blur(5px);
-            border: 2px solid rgba(255,255,255,0.1);
-        }
-
-        .card-header .icon-circle i {
-            font-size: 24px;
+            background: rgba(255,255,255,0.9);
+            padding: 5px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            object-fit: contain;
         }
 
         .card-header h1 {
@@ -87,10 +82,11 @@
             letter-spacing: 0.5px;
         }
 
-        .card-header p {
+        .card-header .sub-title {
             margin: 5px 0 0 0;
             opacity: 0.9;
             font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         /* --- Content Section --- */
@@ -138,11 +134,14 @@
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--primary-color);
+            color: #fff;
             font-weight: 700;
             margin-bottom: 15px;
-            padding-left: 10px;
-            border-left: 4px solid var(--primary-color);
+            padding: 8px 15px;
+            /* Background Style */
+            background: var(--primary-gradient);
+            border-radius: 4px;
+            display: inline-block;
         }
 
         .data-list {
@@ -225,11 +224,13 @@
     <div class="verification-wrapper">
         <div class="card" id="mainCard">
             <div class="card-header">
-                <div class="icon-circle">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
+                <!-- Logo Placeholder (Ganti src dengan URL asli) -->
+                <img src="Logo_ISB_atma_luhur_final.png" alt="Logo ISB Atma Luhur">
                 <h1>Verifikasi Dokumen Digital</h1>
-                <p>Sistem Informasi Surat Pascasarjana</p>
+                <div class="sub-title">
+                    SISURATS2 v.1.0.3<br>Sistem Informasi Surat Akademik S2 Program Pascasarjana<br>
+                    Institut Sains dan Bisnis Atma Luhur
+                </div>
             </div>
             <div class="card-body" id="results">
                 <div class="loading-state">
@@ -304,19 +305,25 @@
                 }
             }
 
-            function validateTimeBasedToken(nim, token) {
-                const today = new Date().toISOString().split('T')[0];
-                const combined = `${nim}-${today}-${SECRET_KEY}`;
-                const expectedToken = customHash(combined);
-                return token === expectedToken;
-            }
-
             function formatDate(dateStr) {
                 const date = new Date(dateStr);
                 return date.toLocaleDateString('id-ID', { 
                     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
                     hour: '2-digit', minute: '2-digit'
                 });
+            }
+
+            // Cek masa berlaku 6 bulan (sekitar 180 hari)
+            function checkExpiry(createdAtStr) {
+                const createdDate = new Date(createdAtStr);
+                const now = new Date();
+                const diffTime = now - createdDate;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+                if (diffDays < 0) return { valid: false, text: "Tanggal Tidak Valid" };
+                if (diffDays > 180) return { valid: false, text: `Masa Berlaku Habis (${diffDays} Hari)` };
+                
+                return { valid: true, text: `Aktif (Sisa ${180 - diffDays} Hari)` };
             }
 
             function updateUISuccess(data) {
@@ -357,16 +364,20 @@
                                 <span class="data-label"><i class="fas fa-calendar"></i> Tanggal Cetak</span>
                                 <span class="data-value">${formatDate(data.createdAt)}</span>
                             </li>
-                            <li class="data-item">
+                             <li class="data-item">
                                 <span class="data-label"><i class="fas fa-key"></i> Serial</span>
                                 <span class="data-value" style="font-family: monospace; font-size: 0.8rem;">${data.serial}</span>
                             </li>
                              <li class="data-item">
-                                <span class="data-label"><i class="fas fa-clock"></i> Token Status</span>
-                                <span class="data-value" style="color: ${data.tokenValid ? '#28a745' : '#dc3545'}">
-                                    <i class="fas ${data.tokenValid ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
-                                    ${data.tokenValid ? 'Valid' : 'Tidak Valid'}
+                                <span class="data-label"><i class="fas fa-clock"></i> Status</span>
+                                <span class="data-value" style="color: ${data.expiry.valid ? '#28a745' : '#dc3545'}">
+                                    <i class="fas ${data.expiry.valid ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
+                                    ${data.expiry.text}
                                 </span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-print"></i> Dicetak Oleh</span>
+                                <span class="value">${data.adminInfo}</span>
                             </li>
                         </ul>
                     </div>
@@ -388,9 +399,9 @@
                 
                 if (!decryptedData) throw new Error("Gagal dekripsi");
 
-                // Format: nim|tanggal|pejabat|jabatan|nama_mhs|nama_surat|hash|serial|token
+                // Format BARU: nim|tanggal|pejabat|jabatan|nama_mhs|nama_surat|hash|serial|admin_info
                 const parts = decryptedData.split('|');
-                if (parts.length < 9) throw new Error("Format tidak lengkap");
+                if (parts.length < 9) throw new Error("Format data tidak lengkap ("+parts.length+")");
 
                 const nim = parts[0];
                 const createdAt = parts[1];
@@ -400,7 +411,7 @@
                 const namaSurat = parts[5];
                 const hash = parts[6];
                 const serial = parts[7];
-                const token = parts[8];
+                const adminInfo = parts[8];
 
                 if (version !== ALGORITHM_VERSION) {
                     updateUIFailed("Versi Lama", "Versi algoritma tidak didukung.");
@@ -408,14 +419,14 @@
                 }
 
                 // Validasi Hash
-                // Urutan: nim-tanggal-pejabat-jabatan-nama-serial
-                const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${nama}-${serial}`;
+                // Urutan: nim-tanggal-pejabat-jabatan-nama-serial-admin_info
+                const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${nama}-${serial}-${adminInfo}`;
                 const generatedHash = customHash(stringToHash);
 
                 if (generatedHash === hash) {
-                    const tokenValid = validateTimeBasedToken(nim, token);
+                    const expiry = checkExpiry(createdAt);
                     updateUISuccess({
-                        nim, createdAt, pejabat, jabatan, nama, namaSurat, serial, tokenValid
+                        nim, createdAt, pejabat, jabatan, nama, namaSurat, serial, expiry, adminInfo
                     });
                 } else {
                     updateUIFailed("Data Tidak Cocok", "Hash tidak valid. Data mungkin telah diubah.");
