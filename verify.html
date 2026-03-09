@@ -242,7 +242,7 @@
             </div>
             <div class="card-footer">
                 IT Division Biro Administrasi Akademik & Kemahasiswaan<br>Program Pascasarjana - ISB Atma Luhur<br>
-                <a href="https://pasca.atmaluhur.ac.id" target="_blank">pasca.atmaluhur.ac.id</a>
+                <a href="https://pasca.atmaluhur.ac.id" target="_blank"><i class="fas fa-globe"></i> pasca.atmaluhur.ac.id</a>
             </div>
         </div>
     </div>
@@ -308,21 +308,27 @@
                 }
             }
 
-            // --- PERBAIKAN: Fungsi Format Tanggal ---
-            function formatShortDate(dateStr) {
-                // Python mengirim format "YYYY-MM-DD HH:MM:SS" dalam UTC.
-                // Kita perlu menambahkan 'Z' agar JavaScript tahu itu UTC.
-                // Jika tidak, JS menganggapnya waktu lokal.
-                const date = new Date(dateStr + 'Z'); 
+            // --- PERBAIKAN: Format Tanggal Spesifik ---
+            function formatCustomDate(dateStr) {
+                const date = new Date(dateStr + 'Z'); // Parse as UTC
                 
-                return date.toLocaleDateString('id-ID', { 
-                    year: 'numeric', month: 'short', day: 'numeric',
-                    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
-                });
+                // Daftar Nama Bulan
+                const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                
+                const day = date.getDate();
+                const monthIndex = date.getMonth();
+                const year = date.getFullYear();
+                
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                
+                // Format: 9 Maret 2026, 09.00.00
+                return `${day} ${monthNames[monthIndex]} ${year}, ${hours}.${minutes}.${seconds}`;
             }
 
             function checkExpiry(createdAtStr) {
-                // Gunakan parsing UTC yang sama
                 const createdDate = new Date(createdAtStr + 'Z');
                 const now = new Date();
                 const diffTime = now - createdDate;
@@ -346,7 +352,7 @@
                     </div>
                     
                     <div class="data-list-container">
-                        <div class="data-list-header">Identitas Mahasiswa</div>
+                        <div class="data-list-header">Identitas Pemohon</div>
                         <ul class="data-list">
                             <li class="data-item">
                                 <span class="data-label"><i class="fas fa-user"></i> Nama</span>
@@ -356,7 +362,6 @@
                                 <span class="data-label"><i class="fas fa-id-card"></i> NIM</span>
                                 <span class="data-value">${data.nim}</span>
                             </li>
-                            <!-- TAMBAHAN: Nomor Surat di atas Jenis Surat -->
                             <li class="data-item">
                                 <span class="data-label"><i class="fas fa-hashtag"></i> Nomor Surat</span>
                                 <span class="data-value" style="font-size: 0.85rem;">${data.nomorSuratFull}</span>
@@ -367,11 +372,10 @@
                             </li>
                         </ul>
                         
-                        <!-- DIPERBAIKI: Kembali ke format List standar, menghapus Signature Properties Box -->
                         <div class="data-list-header" style="margin-top: 25px;">Detail Verifikasi</div>
                         <ul class="data-list">
                             <li class="data-item">
-                                <span class="data-label"><i class="fas fa-user-tie"></i> Pejabat</span>
+                                <span class="data-label"><i class="fas fa-user-tie"></i> Ditandatangani Oleh</span>
                                 <span class="data-value">${data.pejabat}</span>
                             </li>
                             <li class="data-item">
@@ -380,7 +384,7 @@
                             </li>
                             <li class="data-item">
                                 <span class="data-label"><i class="fas fa-calendar"></i> Tanggal Cetak</span>
-                                <span class="data-value">${formatShortDate(data.createdAt)}</span>
+                                <span class="data-value">${formatCustomDate(data.createdAt)}</span>
                             </li>
                              <li class="data-item">
                                 <span class="data-label"><i class="fas fa-key"></i> Serial Number</span>
@@ -418,7 +422,6 @@
                 if (!decryptedData) throw new Error("Gagal dekripsi");
 
                 const parts = decryptedData.split('|');
-                // PERUBAHAN: Jumlah parts sekarang 10 (bertambah 1)
                 if (parts.length < 10) throw new Error("Format data tidak lengkap");
 
                 const nim = parts[0];
@@ -426,18 +429,17 @@
                 const pejabat = parts[2];
                 const jabatan = parts[3];
                 const nama = parts[4];
-                const nomorSuratFull = parts[5]; // BARU: Index 5
-                const namaSurat = parts[6];       // INDEX BERGESER: 6
-                const hash = parts[7];            // INDEX BERGESER: 7
-                const serial = parts[8];          // INDEX BERGESER: 8
-                const adminInfo = parts[9];       // INDEX BERGESER: 9
+                const nomorSuratFull = parts[5];
+                const namaSurat = parts[6];
+                const hash = parts[7];
+                const serial = parts[8];
+                const adminInfo = parts[9];
 
                 if (version !== ALGORITHM_VERSION) {
                     updateUIFailed("Versi Lama", "Versi algoritma tidak didukung.");
                     return;
                 }
 
-                // PERBAIKAN: Sesuaikan stringToHash dengan format baru
                 const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${nama}-${nomorSuratFull}-${serial}-${adminInfo}`;
                 const generatedHash = customHash(stringToHash);
 
