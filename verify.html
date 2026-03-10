@@ -9,8 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- SHA256 Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
-    <!-- PAKO Library untuk Zlib Decompression -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 
     <style>
         /* --- CSS Variables & Reset --- */
@@ -152,47 +150,28 @@
                 return sha256(rotatedParts.join('') + SECRET_KEY);
             }
 
-            // --- FUNGSI DEKRIPSI BARU (SUPPORT ZLIB + BASE64URL) ---
             function decryptQrData(encryptedData) {
                 try {
-                    // 1. Tambahkan padding '=' jika perlu (karena di Python kita rstrip)
-                    let padLength = 4 - (encryptedData.length % 4);
-                    if (padLength < 4) encryptedData += "=".repeat(padLength);
-
-                    // 2. Base64URL Decode
-                    const decodedBytes = atob(encryptedData.replace(/-/g, '+').replace(/_/g, '/'));
-
-                    // 3. XOR Decrypt
-                    let decryptedBytes = new Uint8Array(decodedBytes.length);
+                    const checksum = encryptedData.substring(encryptedData.length - 4);
+                    const encodedData = encryptedData.substring(0, encryptedData.length - 4);
+                    if (customHash(encodedData).substring(0, 4) !== checksum) throw new Error("Checksum Error");
+                    const decodedBytes = atob(encodedData);
+                    let decryptedData = '';
                     for (let i = 0; i < decodedBytes.length; i++) {
-                        decryptedBytes[i] = decodedBytes.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length);
+                        decryptedData += String.fromCharCode(decodedBytes.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length));
                     }
-
-                    // 4. Zlib Decompress
-                    const decompressedData = pako.inflate(decryptedBytes, { to: 'string' });
-
-                    // 5. Parse JSON
-                    return JSON.parse(decompressedData);
-                } catch (error) {
-                    console.error("Decrypt Error:", error);
-                    return null;
-                }
+                    return decryptedData;
+                } catch (error) { return null; }
             }
-            // -------------------------------------------------------
 
             function formatCustomDate(dateStr) {
-                try {
-                    const date = new Date(dateStr + 'Z');
-                    if (isNaN(date)) return dateStr; // Fallback jika format aneh
-                    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-                    const day = date.getDate(); const monthIndex = date.getMonth(); const year = date.getFullYear();
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const seconds = String(date.getSeconds()).padStart(2, '0');
-                    return `${day} ${monthNames[monthIndex]} ${year}, ${hours}.${minutes}.${seconds}`;
-                } catch {
-                    return dateStr;
-                }
+                const date = new Date(dateStr + 'Z');
+                const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const day = date.getDate(); const monthIndex = date.getMonth(); const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${day} ${monthNames[monthIndex]} ${year}, ${hours}.${minutes}.${seconds}`;
             }
 
             function checkExpiry(createdAtStr) {
@@ -206,14 +185,17 @@
             function updateUISuccess(data) {
                 const expiryClass = data.expiry.valid ? 'success' : 'failed';
                 
+                // Dynamic Row Builder
                 let dynamicIdentityRows = '';
                 
+                // 1. Nama (Selalu ada)
                 dynamicIdentityRows += `
                 <li class="data-item">
                     <span class="data-label"><i class="fas fa-user"></i> Nama</span>
                     <span class="data-value">${data.nama}</span>
                 </li>`;
 
+                // 2. NIM (Hanya jika ada)
                 if (data.nim && data.nim !== "-" && data.nim.trim() !== "") {
                     dynamicIdentityRows += `
                     <li class="data-item">
@@ -222,12 +204,14 @@
                     </li>`;
                 }
 
+                // 3. Nomor Surat
                 dynamicIdentityRows += `
                 <li class="data-item">
                     <span class="data-label"><i class="fas fa-hashtag"></i> Nomor Surat</span>
                     <span class="data-value" style="font-size: 0.85rem;">${data.nomorSuratFull}</span>
                 </li>`;
 
+                // 4. Jenis Surat
                 dynamicIdentityRows += `
                 <li class="data-item">
                     <span class="data-label"><i class="fas fa-file-alt"></i> Jenis Surat</span>
@@ -291,41 +275,47 @@
 
             // --- MAIN PROCESS ---
             try {
-                // Gunakan fungsi decrypt baru yang menghasilkan JSON Object
-                const payload = decryptQrData(encryptedData);
+                const decryptedData = decryptQrData(encryptedData);
+                if (!decryptedData) throw new Error("Gagal dekripsi");
 
-                if (!payload) throw new Error("Gagal dekripsi atau format rusak");
+                const parts = decryptedData.split('|');
+                // Format Data (11 parts): 
+                // 0:nim | 1:tanggal | 2:pejabat | 3:jabatan | 4:id_pegawai | 
+                // 5:nama | 6:nomor_surat | 7:nama_surat | 8:hash | 9:serial | 10:admin_info
+                
+                if (parts.length < 11) throw new Error("Format data tidak lengkap");
 
-                // Mapping dari key singkat ke variabel (Backward Compatible)
-                // Key 'i' -> nim, 'n' -> nama, dst.
-                const nim = payload.i || payload.nim || "-";
-                const createdAt = payload.t || payload.createdAt || payload.tanggal_dibuat;
-                const pejabat = payload.p || payload.pejabat || payload.nama_pejabat || "-";
-                const jabatan = payload.j || payload.jabatan || "-";
-                const idPegawai = payload.x || payload.id_pegawai || "-";
-                const nama = payload.n || payload.nama || "-";
-                const nomorSuratFull = payload.f || payload.nomor_surat_full || "-";
-                const namaSurat = payload.s || payload.nama_surat || "-";
-                const hash = payload.h || payload.hash || "-";
-                const serial = payload.r || payload.serial || "-";
-                const adminInfo = payload.a || payload.admin_info || "-";
+                const nim = parts[0];
+                const createdAt = parts[1];
+                const pejabat = parts[2];
+                const jabatan = parts[3];
+                const idPegawai = parts[4];
+                const nama = parts[5];
+                const nomorSuratFull = parts[6];
+                const namaSurat = parts[7]; 
+                const hash = parts[8];
+                const serial = parts[9];
+                const adminInfo = parts[10];
 
                 if (version !== ALGORITHM_VERSION) {
                     updateUIFailed("Versi Lama", "Versi algoritma tidak didukung.");
                     return;
                 }
 
-                // --- LOGIKA VERIFIKASI HASH ---
+                // --- LOGIKA VERIFIKASI BACKWARD COMPATIBLE ---
+                
                 let isVerified = false;
                 
-                // 1. Coba Verifikasi Format Baru (Dengan Nama Surat)
+                // 1. Coba Verifikasi Format BARU (Dengan Nama Surat di Hash)
+                // Digunakan oleh: Surat Keterangan Diterima (SKDK) & Surat Aktif (SKAK) terbaru
                 let stringToHashNew = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
                 let generatedHashNew = customHash(stringToHashNew);
                 
                 if (generatedHashNew === hash) {
                     isVerified = true;
                 } else {
-                    // 2. Jika Gagal, Coba Verifikasi Format Lama
+                    // 2. Jika Gagal, Coba Verifikasi Format LAMA (Tanpa Nama Surat di Hash)
+                    // Digunakan oleh: Surat Aktif (SKAK) versi lama sebelum perbaikan
                     let stringToHashOld = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${serial}-${adminInfo}`;
                     let generatedHashOld = customHash(stringToHashOld);
                     
@@ -334,6 +324,8 @@
                     }
                 }
                 
+                // ----------------------------------------------
+
                 if (isVerified) {
                     const expiry = checkExpiry(createdAt);
                     updateUISuccess({
