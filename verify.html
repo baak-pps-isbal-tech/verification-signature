@@ -185,7 +185,7 @@
             function updateUISuccess(data) {
                 const expiryClass = data.expiry.valid ? 'success' : 'failed';
                 
-                // Dynamic Row Builder for "Identitas Pemohon"
+                // Dynamic Row Builder
                 let dynamicIdentityRows = '';
                 
                 // 1. Nama (Selalu ada)
@@ -292,7 +292,7 @@
                 const idPegawai = parts[4];
                 const nama = parts[5];
                 const nomorSuratFull = parts[6];
-                const namaSurat = parts[7]; // Ambil nama surat
+                const namaSurat = parts[7]; 
                 const hash = parts[8];
                 const serial = parts[9];
                 const adminInfo = parts[10];
@@ -302,12 +302,31 @@
                     return;
                 }
 
-                // --- PERBAIKAN HASH: Sertakan namaSurat ---
-                const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
+                // --- LOGIKA VERIFIKASI BACKWARD COMPATIBLE ---
                 
-                const generatedHash = customHash(stringToHash);
+                let isVerified = false;
+                
+                // 1. Coba Verifikasi Format BARU (Dengan Nama Surat di Hash)
+                // Digunakan oleh: Surat Keterangan Diterima (SKDK) & Surat Aktif (SKAK) terbaru
+                let stringToHashNew = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
+                let generatedHashNew = customHash(stringToHashNew);
+                
+                if (generatedHashNew === hash) {
+                    isVerified = true;
+                } else {
+                    // 2. Jika Gagal, Coba Verifikasi Format LAMA (Tanpa Nama Surat di Hash)
+                    // Digunakan oleh: Surat Aktif (SKAK) versi lama sebelum perbaikan
+                    let stringToHashOld = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${serial}-${adminInfo}`;
+                    let generatedHashOld = customHash(stringToHashOld);
+                    
+                    if (generatedHashOld === hash) {
+                        isVerified = true;
+                    }
+                }
+                
+                // ----------------------------------------------
 
-                if (generatedHash === hash) {
+                if (isVerified) {
                     const expiry = checkExpiry(createdAt);
                     updateUISuccess({
                         nim, createdAt, pejabat, jabatan, idPegawai, nama, nomorSuratFull, namaSurat, serial, expiry, adminInfo
