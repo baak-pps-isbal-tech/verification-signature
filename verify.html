@@ -153,42 +153,14 @@
             function decryptQrData(encryptedData) {
                 try {
                     const checksum = encryptedData.substring(encryptedData.length - 4);
-                    let encodedData = encryptedData.substring(0, encryptedData.length - 4);
-                    
-                    // Validasi Checksum
+                    const encodedData = encryptedData.substring(0, encryptedData.length - 4);
                     if (customHash(encodedData).substring(0, 4) !== checksum) throw new Error("Checksum Error");
-                    
-                    // Restore Padding Base64
-                    encodedData = encodedData.replace(/-/g, '+').replace(/_/g, '/');
-                    while (encodedData.length % 4) {
-                        encodedData += '=';
-                    }
-
-                    // Decode Base64
                     const decodedBytes = atob(encodedData);
-                    
-                    // Proses Decrypt XOR -> Hasilnya adalah Bytes Terkompresi
-                    let decryptedBytes = new Uint8Array(decodedBytes.length);
+                    let decryptedData = '';
                     for (let i = 0; i < decodedBytes.length; i++) {
-                        decryptedBytes[i] = decodedBytes.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length);
+                        decryptedData += String.fromCharCode(decodedBytes.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length));
                     }
-
-                    // --- PROSES DEKOMPRESI (ZLIB) ---
-                    try {
-                        // Coba dekompresi (untuk QR Code BARU yang pendek)
-                        const decompressedData = pako.inflate(decryptedBytes, { to: 'string' });
-                        return decompressedData;
-                    } catch (e) {
-                        // Jika gagal dekompresi, kemungkinan data lama (tidak terkompresi)
-                        // Lakukan decode string biasa (fallback)
-                        let result = '';
-                        for (let i = 0; i < decryptedBytes.length; i++) {
-                            result += String.fromCharCode(decryptedBytes[i]);
-                        }
-                        return result;
-                    }
-                    // --------------------------------
-
+                    return decryptedData;
                 } catch (error) { return null; }
             }
 
@@ -213,7 +185,7 @@
             function updateUISuccess(data) {
                 const expiryClass = data.expiry.valid ? 'success' : 'failed';
                 
-                // Dynamic Row Builder
+                // Dynamic Row Builder for "Identitas Pemohon"
                 let dynamicIdentityRows = '';
                 
                 // 1. Nama (Selalu ada)
@@ -320,7 +292,7 @@
                 const idPegawai = parts[4];
                 const nama = parts[5];
                 const nomorSuratFull = parts[6];
-                const namaSurat = parts[7]; 
+                const namaSurat = parts[7]; // Ambil nama surat
                 const hash = parts[8];
                 const serial = parts[9];
                 const adminInfo = parts[10];
@@ -330,31 +302,12 @@
                     return;
                 }
 
-                // --- LOGIKA VERIFIKASI BACKWARD COMPATIBLE ---
+                // --- PERBAIKAN HASH: Sertakan namaSurat ---
+                const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
                 
-                let isVerified = false;
-                
-                // 1. Coba Verifikasi Format BARU (Dengan Nama Surat di Hash)
-                // Digunakan oleh: Surat Keterangan Diterima (SKDK) & Surat Aktif (SKAK) terbaru
-                let stringToHashNew = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
-                let generatedHashNew = customHash(stringToHashNew);
-                
-                if (generatedHashNew === hash) {
-                    isVerified = true;
-                } else {
-                    // 2. Jika Gagal, Coba Verifikasi Format LAMA (Tanpa Nama Surat di Hash)
-                    // Digunakan oleh: Surat Aktif (SKAK) versi lama sebelum perbaikan
-                    let stringToHashOld = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${serial}-${adminInfo}`;
-                    let generatedHashOld = customHash(stringToHashOld);
-                    
-                    if (generatedHashOld === hash) {
-                        isVerified = true;
-                    }
-                }
-                
-                // ----------------------------------------------
+                const generatedHash = customHash(stringToHash);
 
-                if (isVerified) {
+                if (generatedHash === hash) {
                     const expiry = checkExpiry(createdAt);
                     updateUISuccess({
                         nim, createdAt, pejabat, jabatan, idPegawai, nama, nomorSuratFull, namaSurat, serial, expiry, adminInfo
@@ -371,5 +324,3 @@
     </script>
 </body>
 </html>
-
-
