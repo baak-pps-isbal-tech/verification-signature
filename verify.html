@@ -153,8 +153,22 @@
             function decryptQrData(encryptedData) {
                 try {
                     const checksum = encryptedData.substring(encryptedData.length - 4);
-                    const encodedData = encryptedData.substring(0, encryptedData.length - 4);
+                    let encodedData = encryptedData.substring(0, encryptedData.length - 4);
+                    
+                    // --- PERBAIKAN: Handle URL Safe Base64 & Padding ---
+                    // 1. Cek Hash Checksum dulu menggunakan string asli (tanpa padding)
                     if (customHash(encodedData).substring(0, 4) !== checksum) throw new Error("Checksum Error");
+                    
+                    // 2. Konversi kembali ke Base64 standar untuk proses atob()
+                    //    Ganti '-' dengan '+', dan '_' dengan '/'
+                    encodedData = encodedData.replace(/-/g, '+').replace(/_/g, '/');
+                    
+                    // 3. Tambahkan padding '=' jika diperlukan (panjang harus kelipatan 4)
+                    while (encodedData.length % 4) {
+                        encodedData += '=';
+                    }
+                    // --------------------------------------------------
+
                     const decodedBytes = atob(encodedData);
                     let decryptedData = '';
                     for (let i = 0; i < decodedBytes.length; i++) {
@@ -343,3 +357,4 @@
     </script>
 </body>
 </html>
+
