@@ -155,26 +155,40 @@
                     const checksum = encryptedData.substring(encryptedData.length - 4);
                     let encodedData = encryptedData.substring(0, encryptedData.length - 4);
                     
-                    // --- PERBAIKAN: Handle URL Safe Base64 & Padding ---
-                    // 1. Cek Hash Checksum dulu menggunakan string asli (tanpa padding)
+                    // Validasi Checksum
                     if (customHash(encodedData).substring(0, 4) !== checksum) throw new Error("Checksum Error");
                     
-                    // 2. Konversi kembali ke Base64 standar untuk proses atob()
-                    //    Ganti '-' dengan '+', dan '_' dengan '/'
+                    // Restore Padding Base64
                     encodedData = encodedData.replace(/-/g, '+').replace(/_/g, '/');
-                    
-                    // 3. Tambahkan padding '=' jika diperlukan (panjang harus kelipatan 4)
                     while (encodedData.length % 4) {
                         encodedData += '=';
                     }
-                    // --------------------------------------------------
 
+                    // Decode Base64
                     const decodedBytes = atob(encodedData);
-                    let decryptedData = '';
+                    
+                    // Proses Decrypt XOR -> Hasilnya adalah Bytes Terkompresi
+                    let decryptedBytes = new Uint8Array(decodedBytes.length);
                     for (let i = 0; i < decodedBytes.length; i++) {
-                        decryptedData += String.fromCharCode(decodedBytes.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length));
+                        decryptedBytes[i] = decodedBytes.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length);
                     }
-                    return decryptedData;
+
+                    // --- PROSES DEKOMPRESI (ZLIB) ---
+                    try {
+                        // Coba dekompresi (untuk QR Code BARU yang pendek)
+                        const decompressedData = pako.inflate(decryptedBytes, { to: 'string' });
+                        return decompressedData;
+                    } catch (e) {
+                        // Jika gagal dekompresi, kemungkinan data lama (tidak terkompresi)
+                        // Lakukan decode string biasa (fallback)
+                        let result = '';
+                        for (let i = 0; i < decryptedBytes.length; i++) {
+                            result += String.fromCharCode(decryptedBytes[i]);
+                        }
+                        return result;
+                    }
+                    // --------------------------------
+
                 } catch (error) { return null; }
             }
 
@@ -357,4 +371,5 @@
     </script>
 </body>
 </html>
+
 
