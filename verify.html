@@ -186,7 +186,6 @@
                 const expiryClass = data.expiry.valid ? 'success' : 'failed';
                 
                 // Dynamic Row Builder for "Identitas Pemohon"
-                // Jika NIM ada, tampilkan. Jika tidak (untuk surat lain), bisa disembunyikan atau diganti.
                 let dynamicIdentityRows = '';
                 
                 // 1. Nama (Selalu ada)
@@ -196,7 +195,7 @@
                     <span class="data-value">${data.nama}</span>
                 </li>`;
 
-                // 2. NIM (Hanya jika ada - conditional untuk surat non-mahasiswa)
+                // 2. NIM (Hanya jika ada)
                 if (data.nim && data.nim !== "-" && data.nim.trim() !== "") {
                     dynamicIdentityRows += `
                     <li class="data-item">
@@ -205,14 +204,14 @@
                     </li>`;
                 }
 
-                // 3. Nomor Surat (Selalu ada)
+                // 3. Nomor Surat
                 dynamicIdentityRows += `
                 <li class="data-item">
                     <span class="data-label"><i class="fas fa-hashtag"></i> Nomor Surat</span>
                     <span class="data-value" style="font-size: 0.85rem;">${data.nomorSuratFull}</span>
                 </li>`;
 
-                // 4. Jenis Surat (Selalu ada)
+                // 4. Jenis Surat
                 dynamicIdentityRows += `
                 <li class="data-item">
                     <span class="data-label"><i class="fas fa-file-alt"></i> Jenis Surat</span>
@@ -280,27 +279,32 @@
                 if (!decryptedData) throw new Error("Gagal dekripsi");
 
                 const parts = decryptedData.split('|');
-                // Format BARU (11 parts): nim|tanggal|pejabat|jabatan|id_pegawai|nama|nomor_surat|nama_surat|hash|serial|admin_info
+                // Format Data (11 parts): 
+                // 0:nim | 1:tanggal | 2:pejabat | 3:jabatan | 4:id_pegawai | 
+                // 5:nama | 6:nomor_surat | 7:nama_surat | 8:hash | 9:serial | 10:admin_info
+                
                 if (parts.length < 11) throw new Error("Format data tidak lengkap");
 
                 const nim = parts[0];
                 const createdAt = parts[1];
                 const pejabat = parts[2];
                 const jabatan = parts[3];
-                const idPegawai = parts[4]; // Index 4
-                const nama = parts[5];       // Index 5
-                const nomorSuratFull = parts[6]; // Index 6
-                const namaSurat = parts[7];      // Index 7
-                const hash = parts[8];           // Index 8
-                const serial = parts[9];         // Index 9
-                const adminInfo = parts[10];     // Index 10
+                const idPegawai = parts[4];
+                const nama = parts[5];
+                const nomorSuratFull = parts[6];
+                const namaSurat = parts[7]; // Ambil nama surat
+                const hash = parts[8];
+                const serial = parts[9];
+                const adminInfo = parts[10];
 
                 if (version !== ALGORITHM_VERSION) {
                     updateUIFailed("Versi Lama", "Versi algoritma tidak didukung.");
                     return;
                 }
 
-                const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${serial}-${adminInfo}`;
+                // --- PERBAIKAN HASH: Sertakan namaSurat ---
+                const stringToHash = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
+                
                 const generatedHash = customHash(stringToHash);
 
                 if (generatedHash === hash) {
