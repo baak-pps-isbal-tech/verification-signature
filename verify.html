@@ -185,21 +185,37 @@
             function updateUISuccess(data) {
                 const expiryClass = data.expiry.valid ? 'success' : 'failed';
                 
-                // Dynamic Row Builder
+                // --- LOGIKA DINAMIS UNTUK SKJP ---
+                const isJadwal = data.namaSurat === "Surat Keterangan Jadwal Perkuliahan";
+                
+                // Tentukan Header Identitas
+                const identityHeader = isJadwal ? "Identitas Surat" : "Identitas Pemohon";
+                
+                // Tentukan Label Baris Pertama (Nama)
+                const label1Text = isJadwal ? "Ditujukan Kepada" : "Nama";
+                const label1Icon = isJadwal ? "fa-users" : "fa-user";
+                
+                // Tentukan Label & Icon Baris Kedua (NIM/Tahun Ajaran)
+                const label2Text = isJadwal ? "Tahun Ajaran" : "NIM";
+                const label2Icon = isJadwal ? "fa-calendar-alt" : "fa-id-card";
+                
+                // Kondisi tampil baris kedua (Untuk SKJP selalu tampil, untuk lainnya jika ada NIM)
+                const showSecondRow = isJadwal || (data.nim && data.nim !== "-" && data.nim.trim() !== "");
+
                 let dynamicIdentityRows = '';
                 
-                // 1. Nama (Selalu ada)
+                // 1. Baris Nama / Ditujukan Kepada
                 dynamicIdentityRows += `
                 <li class="data-item">
-                    <span class="data-label"><i class="fas fa-user"></i> Nama</span>
+                    <span class="data-label"><i class="fas ${label1Icon}"></i> ${label1Text}</span>
                     <span class="data-value">${data.nama}</span>
                 </li>`;
 
-                // 2. NIM (Hanya jika ada)
-                if (data.nim && data.nim !== "-" && data.nim.trim() !== "") {
+                // 2. Baris NIM / Tahun Ajaran
+                if (showSecondRow) {
                     dynamicIdentityRows += `
                     <li class="data-item">
-                        <span class="data-label"><i class="fas fa-id-card"></i> NIM</span>
+                        <span class="data-label"><i class="fas ${label2Icon}"></i> ${label2Text}</span>
                         <span class="data-value">${data.nim}</span>
                     </li>`;
                 }
@@ -225,7 +241,7 @@
                     </div>
                     
                     <div class="data-list-container">
-                        <div class="data-list-header">Identitas Pemohon</div>
+                        <div class="data-list-header">${identityHeader}</div>
                         <ul class="data-list">
                             ${dynamicIdentityRows}
                         </ul>
@@ -307,7 +323,6 @@
                 let isVerified = false;
                 
                 // 1. Coba Verifikasi Format BARU (Dengan Nama Surat di Hash)
-                // Digunakan oleh: Surat Keterangan Diterima (SKDK) & Surat Aktif (SKAK) terbaru
                 let stringToHashNew = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
                 let generatedHashNew = customHash(stringToHashNew);
                 
@@ -315,7 +330,6 @@
                     isVerified = true;
                 } else {
                     // 2. Jika Gagal, Coba Verifikasi Format LAMA (Tanpa Nama Surat di Hash)
-                    // Digunakan oleh: Surat Aktif (SKAK) versi lama sebelum perbaikan
                     let stringToHashOld = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${serial}-${adminInfo}`;
                     let generatedHashOld = customHash(stringToHashOld);
                     
