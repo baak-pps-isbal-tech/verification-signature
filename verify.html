@@ -185,8 +185,9 @@
             function updateUISuccess(data) {
                 const expiryClass = data.expiry.valid ? 'success' : 'failed';
                 
-                // --- LOGIKA DINAMIS UNTUK SKJP ---
+                                // --- LOGIKA DINAMIS UNTUK SKJP & SURAT TUGAS DOSEN ---
                 const isJadwal = data.namaSurat === "Surat Keterangan Jadwal Perkuliahan";
+                const isSuratTugasDosen = data.namaSurat === "Surat Tugas Dosen";
                 
                 // Tentukan Header Identitas
                 const identityHeader = isJadwal ? "Identitas Surat" : "Identitas Pemohon";
@@ -195,9 +196,17 @@
                 const label1Text = isJadwal ? "Ditujukan Kepada" : "Nama";
                 const label1Icon = isJadwal ? "fa-users" : "fa-user";
                 
-                // Tentukan Label & Icon Baris Kedua (NIM/Tahun Ajaran)
-                const label2Text = isJadwal ? "Tahun Ajaran" : "NIM";
-                const label2Icon = isJadwal ? "fa-calendar-alt" : "fa-id-card";
+                // Tentukan Label & Icon Baris Kedua (NIM/Tahun Ajaran/NIDN)
+                let label2Text = "NIM";
+                let label2Icon = "fa-id-card";
+                
+                if (isJadwal) {
+                    label2Text = "Tahun Ajaran";
+                    label2Icon = "fa-calendar-alt";
+                } else if (isSuratTugasDosen) {
+                    label2Text = "NIDN";
+                    label2Icon = "fa-fingerprint";
+                }
                 
                 // Kondisi tampil baris kedua (Untuk SKJP selalu tampil, untuk lainnya jika ada NIM)
                 const showSecondRow = isJadwal || (data.nim && data.nim !== "-" && data.nim.trim() !== "");
