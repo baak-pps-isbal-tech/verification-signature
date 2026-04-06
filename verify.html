@@ -185,42 +185,42 @@
             function updateUISuccess(data) {
                 const expiryClass = data.expiry.valid ? 'success' : 'failed';
                 
-                                // --- LOGIKA DINAMIS UNTUK SKJP & SURAT TUGAS DOSEN ---
+                // --- LOGIKA DINAMIS UNTUK BERBAGAI JENIS SURAT ---
                 const isJadwal = data.namaSurat === "Surat Keterangan Jadwal Perkuliahan";
                 const isSuratTugasDosen = data.namaSurat === "Surat Tugas Dosen";
+                const isPembelianBarang = data.namaSurat === "Surat Permohonan Pembelian Barang Perkuliahan";
                 
                 // Tentukan Header Identitas
-                const identityHeader = isJadwal ? "Identitas Surat" : "Identitas Pemohon";
+                let identityHeader = "Identitas Pemohon";
+                if (isJadwal) identityHeader = "Identitas Surat";
+                if (isPembelianBarang) identityHeader = "Identitas Ditujukan";
                 
                 // Tentukan Label Baris Pertama (Nama)
-                const label1Text = isJadwal ? "Ditujukan Kepada" : "Nama";
-                const label1Icon = isJadwal ? "fa-users" : "fa-user";
+                let label1Text = "Nama";
+                let label1Icon = "fa-user";
+                if (isJadwal) { label1Text = "Ditujukan Kepada"; label1Icon = "fa-users"; }
+                if (isPembelianBarang) { label1Text = "Ditujukan"; label1Icon = "fa-building"; }
                 
                 // Tentukan Label & Icon Baris Kedua (NIM/Tahun Ajaran/NIDN)
                 let label2Text = "NIM";
                 let label2Icon = "fa-id-card";
                 
-                if (isJadwal) {
-                    label2Text = "Tahun Ajaran";
-                    label2Icon = "fa-calendar-alt";
-                } else if (isSuratTugasDosen) {
-                    label2Text = "NIDN";
-                    label2Icon = "fa-fingerprint";
-                }
+                if (isJadwal) { label2Text = "Tahun Ajaran"; label2Icon = "fa-calendar-alt"; }
+                else if (isSuratTugasDosen) { label2Text = "NIDN"; label2Icon = "fa-fingerprint"; }
                 
-                // Kondisi tampil baris kedua (Untuk SKJP selalu tampil, untuk lainnya jika ada NIM)
-                const showSecondRow = isJadwal || (data.nim && data.nim !== "-" && data.nim.trim() !== "");
+                // Kondisi tampil baris kedua
+                const showSecondRow = isJadwal || isPembelianBarang || (data.nim && data.nim !== "-" && data.nim.trim() !== "");
 
                 let dynamicIdentityRows = '';
                 
-                // 1. Baris Nama / Ditujukan Kepada
+                // 1. Baris Nama / Ditujukan Kepada / Ditujukan
                 dynamicIdentityRows += `
                 <li class="data-item">
                     <span class="data-label"><i class="fas ${label1Icon}"></i> ${label1Text}</span>
                     <span class="data-value">${data.nama}</span>
                 </li>`;
 
-                // 2. Baris NIM / Tahun Ajaran
+                // 2. Baris NIM / Tahun Ajaran (Untuk Pembelian Barang tidak ditampilkan karena NIM = "-")
                 if (showSecondRow) {
                     dynamicIdentityRows += `
                     <li class="data-item">
