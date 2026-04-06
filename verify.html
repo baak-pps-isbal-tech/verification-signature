@@ -208,8 +208,8 @@
                 if (isJadwal) { label2Text = "Tahun Ajaran"; label2Icon = "fa-calendar-alt"; }
                 else if (isSuratTugasDosen) { label2Text = "NIDN"; label2Icon = "fa-fingerprint"; }
                 
-                // Kondisi tampil baris kedua
-                const showSecondRow = isJadwal || isPembelianBarang || (data.nim && data.nim !== "-" && data.nim.trim() !== "");
+                // Kondisi tampil baris kedua (Untuk SPBB dihilangkan dari sini, karena NIM selalu "-" maka otomatis tidak tampil)
+                const showSecondRow = isJadwal || (data.nim && data.nim !== "-" && data.nim.trim() !== "");
 
                 let dynamicIdentityRows = '';
                 
