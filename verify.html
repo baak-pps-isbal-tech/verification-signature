@@ -258,13 +258,23 @@
                         <div class="data-list-header" style="margin-top: 25px;">Detail Verifikasi</div>
                         <ul class="data-list">
                             <li class="data-item">
-                                <span class="data-label"><i class="fas fa-user-tie"></i> Ditandatangani Oleh</span>
+                                <span class="data-label"><i class="fas fa-user-tie"></i> Penandatangan 1</span>
                                 <span class="data-value">${data.pejabat} [${data.idPegawai}]</span>
                             </li>
                             <li class="data-item">
-                                <span class="data-label"><i class="fas fa-briefcase"></i> Jabatan</span>
+                                <span class="data-label"><i class="fas fa-briefcase"></i> Jabatan 1</span>
                                 <span class="data-value">${data.jabatan}</span>
                             </li>
+                            ${data.pejabat2 ? `
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-user-tie"></i> Penandatangan 2</span>
+                                <span class="data-value">${data.pejabat2} [${data.idPegawai2}]</span>
+                            </li>
+                            <li class="data-item">
+                                <span class="data-label"><i class="fas fa-briefcase"></i> Jabatan 2</span>
+                                <span class="data-value">${data.jabatan2}</span>
+                            </li>
+                            ` : ''}
                             <li class="data-item">
                                 <span class="data-label"><i class="fas fa-calendar"></i> Tanggal Cetak</span>
                                 <span class="data-value">${formatCustomDate(data.createdAt)}</span>
@@ -303,24 +313,35 @@
                 const decryptedData = decryptQrData(encryptedData);
                 if (!decryptedData) throw new Error("Gagal dekripsi");
 
-                const parts = decryptedData.split('|');
-                // Format Data (11 parts): 
-                // 0:nim | 1:tanggal | 2:pejabat | 3:jabatan | 4:id_pegawai | 
-                // 5:nama | 6:nomor_surat | 7:nama_surat | 8:hash | 9:serial | 10:admin_info
+                                const parts = decryptedData.split('|');
                 
-                if (parts.length < 11) throw new Error("Format data tidak lengkap");
+                // Default 11 parts mapping (Backward Compatible)
+                let nim = parts[0];
+                let createdAt = parts[1];
+                let pejabat = parts[2];
+                let jabatan = parts[3];
+                let idPegawai = parts[4];
+                let nama = parts[5];
+                let nomorSuratFull = parts[6];
+                let namaSurat = parts[7]; 
+                let hash = parts[8];
+                let serial = parts[9];
+                let adminInfo = parts[10];
 
-                const nim = parts[0];
-                const createdAt = parts[1];
-                const pejabat = parts[2];
-                const jabatan = parts[3];
-                const idPegawai = parts[4];
-                const nama = parts[5];
-                const nomorSuratFull = parts[6];
-                const namaSurat = parts[7]; 
-                const hash = parts[8];
-                const serial = parts[9];
-                const adminInfo = parts[10];
+                // Variable tambahan untuk 2 pejabat (Khusus SBCA)
+                let pejabat2 = null;
+                let jabatan2 = null;
+                let idPegawai2 = null;
+
+                if (parts.length === 15 && parts[10] === "Surat Balasan Cuti Akademik") {
+                    // Remap ke format 15 parts khusus Surat Balasan Cuti Akademik
+                    pejabat = parts[2]; jabatan = parts[3]; idPegawai = parts[4];
+                    pejabat2 = parts[5]; jabatan2 = parts[6]; idPegawai2 = parts[7];
+                    nama = parts[8]; nomorSuratFull = parts[9]; namaSurat = parts[10];
+                    hash = parts[11]; serial = parts[12]; adminInfo = parts[13];
+                } else if (parts.length < 11) {
+                    throw new Error("Format data tidak lengkap");
+                }
 
                 if (version !== ALGORITHM_VERSION) {
                     updateUIFailed("Versi Lama", "Versi algoritma tidak didukung.");
@@ -328,22 +349,29 @@
                 }
 
                 // --- LOGIKA VERIFIKASI BACKWARD COMPATIBLE ---
-                
                 let isVerified = false;
                 
-                // 1. Coba Verifikasi Format BARU (Dengan Nama Surat di Hash)
-                let stringToHashNew = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
-                let generatedHashNew = customHash(stringToHashNew);
-                
-                if (generatedHashNew === hash) {
-                    isVerified = true;
-                } else {
-                    // 2. Jika Gagal, Coba Verifikasi Format LAMA (Tanpa Nama Surat di Hash)
-                    let stringToHashOld = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${serial}-${adminInfo}`;
-                    let generatedHashOld = customHash(stringToHashOld);
-                    
-                    if (generatedHashOld === hash) {
+                if (parts.length === 15 && namaSurat === "Surat Balasan Cuti Akademik") {
+                    // Verifikasi Format Khusus 2 Pejabat
+                    let stringToHashSBCA = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${pejabat2}-${jabatan2}-${idPegawai2}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
+                    if (customHash(stringToHashSBCA) === hash) {
                         isVerified = true;
+                    }
+                } else {
+                    // 1. Coba Verifikasi Format BARU (Dengan Nama Surat di Hash)
+                    let stringToHashNew = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
+                    let generatedHashNew = customHash(stringToHashNew);
+                    
+                    if (generatedHashNew === hash) {
+                        isVerified = true;
+                    } else {
+                        // 2. Jika Gagal, Coba Verifikasi Format LAMA (Tanpa Nama Surat di Hash)
+                        let stringToHashOld = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${nama}-${nomorSuratFull}-${serial}-${adminInfo}`;
+                        let generatedHashOld = customHash(stringToHashOld);
+                        
+                        if (generatedHashOld === hash) {
+                            isVerified = true;
+                        }
                     }
                 }
                 
@@ -352,7 +380,9 @@
                 if (isVerified) {
                     const expiry = checkExpiry(createdAt);
                     updateUISuccess({
-                        nim, createdAt, pejabat, jabatan, idPegawai, nama, nomorSuratFull, namaSurat, serial, expiry, adminInfo
+                        nim, createdAt, pejabat, jabatan, idPegawai, 
+                        pejabat2, jabatan2, idPegawai2,
+                        nama, nomorSuratFull, namaSurat, serial, expiry, adminInfo
                     });
                 } else {
                     updateUIFailed("Data Tidak Cocok", "Hash tidak valid. Dokumen mungkin telah diubah.");
