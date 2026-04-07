@@ -333,8 +333,8 @@
                 let jabatan2 = null;
                 let idPegawai2 = null;
 
-                if (parts.length === 15 && parts[10] === "Surat Balasan Cuti Akademik") {
-                    // Remap ke format 15 parts khusus Surat Balasan Cuti Akademik
+                if (parts.length === 14 && parts[10] === "Surat Balasan Cuti Akademik") {
+                    // Remap ke format 14 parts khusus Surat Balasan Cuti Akademik
                     pejabat = parts[2]; jabatan = parts[3]; idPegawai = parts[4];
                     pejabat2 = parts[5]; jabatan2 = parts[6]; idPegawai2 = parts[7];
                     nama = parts[8]; nomorSuratFull = parts[9]; namaSurat = parts[10];
@@ -351,7 +351,8 @@
                 // --- LOGIKA VERIFIKASI BACKWARD COMPATIBLE ---
                 let isVerified = false;
                 
-                if (parts.length === 15 && namaSurat === "Surat Balasan Cuti Akademik") {
+                if (parts.length === 14 && namaSurat === "Surat Balasan Cuti Akademik") {
+                    // Verifikasi Format Khusus 2 Pejabat
                     // Verifikasi Format Khusus 2 Pejabat
                     let stringToHashSBCA = `${nim}-${createdAt}-${pejabat}-${jabatan}-${idPegawai}-${pejabat2}-${jabatan2}-${idPegawai2}-${nama}-${nomorSuratFull}-${namaSurat}-${serial}-${adminInfo}`;
                     if (customHash(stringToHashSBCA) === hash) {
